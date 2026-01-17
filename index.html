@@ -1,214 +1,205 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TAPE KEEPER - 핵심 공정 관리</title>
-  <style>
-    :root {
-      --bg: #f8fafc; --card: #ffffff; --pri: #6d5efc; --ink: #1e293b;
-      --line: #e2e8f0; --muted: #64748b; --shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    * { box-sizing: border-box; font-family: sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--ink); }
-    .wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
-    header { background: #fff; border-bottom: 1px solid var(--line); padding: 15px 0; margin-bottom: 20px; position: sticky; top: 0; z-index: 10; }
-    .nav { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-    .tab-btn { padding: 10px 20px; border-radius: 20px; border: 1px solid var(--line); background: #fff; cursor: pointer; white-space: nowrap; font-size: 14px; }
-    .tab-btn.active { background: var(--pri); color: #fff; border-color: var(--pri); font-weight: bold; }
-    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--line); margin-bottom: 20px; }
-    h2 { font-size: 16px; margin: 0 0 15px 0; color: var(--pri); }
-    .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-    .field { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 5px; }
-    label { font-size: 12px; color: var(--muted); }
-    input, select { padding: 10px; border: 1px solid var(--line); border-radius: 8px; outline: none; }
-    button.main-btn { padding: 10px 20px; background: var(--pri); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 12px 8px; border-bottom: 1px solid var(--line); text-align: left; }
-    th { color: var(--muted); font-weight: normal; }
-    .right { text-align: right; }
-    .hidden { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAPE KEEPER - Step 1: 발주 관리</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f1f5f9; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { border: 1px solid #ccc; padding: 8px; border-radius: 5px; width: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #f8fafc; color: #64748b; padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        .progress-bar { height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin-top: 5px; }
+        .progress-fill { height: 100%; background: #3b82f6; transition: width 0.3s; }
+    </style>
 </head>
-<body>
+<body class="max-w-5xl mx-auto">
 
-<header>
-  <div class="wrap">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h1 style="margin:0; font-size:20px;">TAPE KEEPER</h1>
-      <button onclick="resetData()" style="font-size:11px; color:red; border:none; background:none; cursor:pointer;">초기화</button>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">TAPE KEEPER <span class="text-sm font-normal text-slate-500">(1단계: 발주 관리)</span></h1>
+        <button onclick="resetData()" class="text-xs text-red-500 underline">데이터 초기화</button>
     </div>
-  </div>
-</header>
 
-<div class="wrap">
-  <div class="nav">
-    <button class="tab-btn active" onclick="showTab('tab1')">1. 발주/재고 등록</button>
-    <button class="tab-btn" onclick="showTab('tab2')">2. 테이프 작업</button>
-    <button class="tab-btn" onclick="showTab('tab3')">3. 현황판</button>
-  </div>
+    <div class="card">
+        <h2 class="text-lg font-bold mb-4">📝 새로운 발주 등록</h2>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">납기일</label>
+                <input type="date" id="inputDate">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs text-gray-500 mb-1">발주명</label>
+                <input type="text" id="inputTitle" placeholder="예: 7125Y 2000개 납품">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">목표 수량(EA)</label>
+                <input type="number" id="inputGoal" placeholder="0">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">비고</label>
+                <input type="text" id="inputMemo" placeholder="거래처/특이사항">
+            </div>
+        </div>
+        <button onclick="addOrder()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
+            + 발주 추가하기
+        </button>
+    </div>
 
-  <section id="tab1">
     <div class="card">
-      <h2>발주 등록 (Order)</h2>
-      <div class="row">
-        <div class="field"><label>발주명</label><input id="ord_name" placeholder="예: 7125Y 2000개" /></div>
-        <div class="field"><label>목표 수량</label><input id="ord_goal" type="number" /></div>
-        <button class="main-btn" onclick="addOrder()">발주 생성</button>
-      </div>
+        <h2 class="text-lg font-bold mb-4">📋 발주 현황 (날짜순 정렬)</h2>
+        <div class="overflow-x-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 130px;">날짜 (수정가능)</th>
+                        <th>발주명 / 비고</th>
+                        <th style="width: 100px;">목표수량</th>
+                        <th style="width: 150px;">진행상황</th>
+                        <th style="width: 80px;">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="orderListBody">
+                    </tbody>
+            </table>
+        </div>
     </div>
-    <div class="card">
-      <h2>테이프 작업 전 재고 등록 (WIP)</h2>
-      <div class="row">
-        <div class="field"><label>제품명</label><input id="wip_name" placeholder="예: 7125Y" /></div>
-        <div class="field"><label>현재 재고(EA)</label><input id="wip_qty" type="number" /></div>
-        <button class="main-btn" onclick="addWip()">재고 등록</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>실무 테이프 기초 재고</h2>
-      <div class="row">
-        <div class="field"><label>테이프 번호</label><input id="t_name" placeholder="예: 6855" /></div>
-        <div class="field"><label>보유 장수(Sheets)</label><input id="t_qty" type="number" /></div>
-        <button class="main-btn" onclick="addTape()">테이프 입고</button>
-      </div>
-    </div>
-  </section>
-
-  <section id="tab2" class="hidden">
-    <div class="card">
-      <h2>테이프 작업 실행 (Execution)</h2>
-      <div class="row">
-        <div class="field"><label>작업할 발주</label><select id="ex_order_sel"></select></div>
-        <div class="field"><label>대상 제품(WIP)</label><select id="ex_wip_sel"></select></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>작업 수량(EA)</label><input id="ex_qty" type="number" /></div>
-        <div class="field"><label>사용할 테이프</label><select id="ex_tape_sel"></select></div>
-        <div class="field"><label>배열수(장당)</label><input id="ex_arr" type="number" value="8" /></div>
-      </div>
-      <button class="main-btn" style="width:100%" onclick="doWork()">작업 완료 (재고 차감)</button>
-    </div>
-  </section>
-
-  <section id="tab3" class="hidden">
-    <div class="card">
-      <h2>발주 달성 현황</h2>
-      <table id="order_table"><thead><tr><th>발주명</th><th>목표</th><th>완료</th><th>달성률</th></tr></thead><tbody></tbody></table>
-    </div>
-    <div class="card">
-      <h2>남은 테이프 현황</h2>
-      <table id="tape_table"><thead><tr><th>테이프</th><th>남은 장수</th></tr></thead><tbody></tbody></table>
-    </div>
-    <div class="card">
-      <h2>작업 전 제품(WIP) 현황</h2>
-      <table id="wip_table"><thead><tr><th>제품명</th><th>남은 수량(EA)</th></tr></thead><tbody></tbody></table>
-    </div>
-  </section>
-</div>
 
 <script>
-let state = JSON.parse(localStorage.getItem('TK_CORE')) || {
-  orders: [], wip: {}, tapes: {}, logs: []
-};
+    // --- 1. 데이터 관리 ---
+    // 로컬스토리지에서 불러오거나 없으면 빈 배열
+    let orders = JSON.parse(localStorage.getItem('TK_STEP1_ORDERS')) || [];
 
-function save() {
-  localStorage.setItem('TK_CORE', JSON.stringify(state));
-  render();
-}
+    // 저장 함수
+    function saveOrders() {
+        localStorage.setItem('TK_STEP1_ORDERS', JSON.stringify(orders));
+        render(); // 저장 후 화면 다시 그리기
+    }
 
-function showTab(tabId) {
-  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-  document.getElementById(tabId).classList.remove('hidden');
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  render();
-}
+    // --- 2. 기능 구현 ---
 
-function addOrder() {
-  const name = document.getElementById('ord_name').value;
-  const goal = parseInt(document.getElementById('ord_goal').value);
-  if(!name || !goal) return alert("발주명과 수량을 입력하세요.");
-  state.orders.push({ name, goal, done: 0 });
-  document.getElementById('ord_name').value = '';
-  document.getElementById('ord_goal').value = '';
-  save();
-}
+    // (1) 발주 추가
+    function addOrder() {
+        const date = document.getElementById('inputDate').value;
+        const title = document.getElementById('inputTitle').value;
+        const goal = parseInt(document.getElementById('inputGoal').value);
+        const memo = document.getElementById('inputMemo').value;
 
-function addWip() {
-  const name = document.getElementById('wip_name').value;
-  const qty = parseInt(document.getElementById('wip_qty').value);
-  if(!name || isNaN(qty)) return alert("정보를 확인하세요.");
-  state.wip[name] = (state.wip[name] || 0) + qty;
-  save();
-}
+        if (!date || !title || !goal) {
+            alert("날짜, 발주명, 목표수량은 필수입니다!");
+            return;
+        }
 
-function addTape() {
-  const name = document.getElementById('t_name').value;
-  const qty = parseInt(document.getElementById('t_qty').value);
-  if(!name || isNaN(qty)) return alert("정보를 확인하세요.");
-  state.tapes[name] = (state.tapes[name] || 0) + qty;
-  save();
-}
+        const newOrder = {
+            id: Date.now(), // 고유 ID
+            date: date,
+            title: title,
+            goal: goal,
+            done: 0, // 현재 작업량 (나중에 작업 기능 만들면 올라감)
+            memo: memo
+        };
 
-function doWork() {
-  const ordIdx = document.getElementById('ex_order_sel').value;
-  const wipName = document.getElementById('ex_wip_sel').value;
-  const tapeName = document.getElementById('ex_tape_sel').value;
-  const qty = parseInt(document.getElementById('ex_qty').value);
-  const arr = parseInt(document.getElementById('ex_arr').value);
+        orders.push(newOrder);
+        
+        // 입력창 비우기
+        document.getElementById('inputTitle').value = '';
+        document.getElementById('inputGoal').value = '';
+        document.getElementById('inputMemo').value = '';
+        
+        saveOrders();
+    }
 
-  if(ordIdx==="" || !wipName || !tapeName || !qty) return alert("모든 칸을 채워주세요.");
-  
-  const needSheets = Math.ceil(qty / arr);
-  
-  if(state.wip[wipName] < qty) return alert("WIP 재고가 부족합니다.");
-  if(state.tapes[tapeName] < needSheets) return alert("테이프 재고가 부족합니다.");
+    // (2) 발주 삭제
+    function deleteOrder(id) {
+        if(confirm('정말 이 발주를 삭제하시겠습니까?')) {
+            orders = orders.filter(order => order.id !== id);
+            saveOrders();
+        }
+    }
 
-  // 재고 차감 및 실적 더하기
-  state.wip[wipName] -= qty;
-  state.tapes[tapeName] -= needSheets;
-  state.orders[ordIdx].done += qty;
-  
-  alert(`작업 완료! 테이프 ${needSheets}장이 차감되었습니다.`);
-  save();
-}
+    // (3) 데이터 수정 (날짜, 목표수량 등 변경 시 바로 저장)
+    function updateOrder(id, field, value) {
+        const order = orders.find(o => o.id === id);
+        if (order) {
+            if (field === 'goal') value = parseInt(value); // 수량은 숫자로 변환
+            order[field] = value;
+            saveOrders();
+        }
+    }
 
-function render() {
-  // 발주 선택박스
-  const ordSel = document.getElementById('ex_order_sel');
-  ordSel.innerHTML = state.orders.map((o, i) => `<option value="${i}">${o.name}</option>`).join('<option value="">(발주 선택)</option>');
+    // (4) 데이터 초기화
+    function resetData() {
+        if(confirm("모든 데이터를 지우고 처음부터 시작할까요?")) {
+            orders = [];
+            saveOrders();
+        }
+    }
 
-  // WIP 선택박스
-  const wipSel = document.getElementById('ex_wip_sel');
-  wipSel.innerHTML = Object.keys(state.wip).map(k => `<option value="${k}">${k}</option>`).join('<option value="">(제품 선택)</option>');
+    // --- 3. 화면 그리기 (Render) ---
+    function render() {
+        const tbody = document.getElementById('orderListBody');
+        tbody.innerHTML = '';
 
-  // 테이프 선택박스
-  const tapeSel = document.getElementById('ex_tape_sel');
-  tapeSel.innerHTML = Object.keys(state.tapes).map(k => `<option value="${k}">${k}</option>`).join('<option value="">(테이프 선택)</option>');
+        // 날짜순 정렬 (빠른 날짜가 위로)
+        orders.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // 현황판 표
-  document.querySelector('#order_table tbody').innerHTML = state.orders.map(o => `
-    <tr><td>${o.name}</td><td>${o.goal}</td><td>${o.done}</td><td>${((o.done/o.goal)*100).toFixed(1)}%</td></tr>
-  `).join('');
+        if (orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400">등록된 발주가 없습니다.</td></tr>`;
+            return;
+        }
 
-  document.querySelector('#tape_table tbody').innerHTML = Object.keys(state.tapes).map(k => `
-    <tr><td>${k}</td><td>${state.tapes[k]}장</td></tr>
-  `).join('');
+        orders.forEach(order => {
+            // 퍼센트 계산
+            let percent = 0;
+            if (order.goal > 0) {
+                percent = Math.round((order.done / order.goal) * 100);
+            }
+            // 100% 넘으면 100으로 고정 (그래픽용)
+            let barWidth = percent > 100 ? 100 : percent; 
+            
+            // 색상: 완료되면 초록, 아니면 파랑
+            let barColor = percent >= 100 ? 'bg-green-500' : 'bg-blue-500';
 
-  document.querySelector('#wip_table tbody').innerHTML = Object.keys(state.wip).map(k => `
-    <tr><td>${k}</td><td>${state.wip[k]}EA</td></tr>
-  `).join('');
-}
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <input type="date" value="${order.date}" 
+                           onchange="updateOrder(${order.id}, 'date', this.value)"
+                           class="bg-transparent border-none focus:ring-0 cursor-pointer">
+                </td>
+                <td>
+                    <div class="font-bold text-gray-800">${order.title}</div>
+                    <div class="text-xs text-gray-500">${order.memo ? 'Note: ' + order.memo : ''}</div>
+                </td>
+                <td>
+                    <input type="number" value="${order.goal}" 
+                           onchange="updateOrder(${order.id}, 'goal', this.value)"
+                           class="w-24 text-right bg-gray-50 border border-gray-200 focus:bg-white">
+                </td>
+                <td>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="font-bold text-gray-700">${order.done.toLocaleString()} / ${order.goal.toLocaleString()}</span>
+                        <span class="text-blue-600 font-bold">${percent}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${barColor}" style="width: ${barWidth}%"></div>
+                    </div>
+                </td>
+                <td>
+                    <button onclick="deleteOrder(${order.id})" class="text-white bg-red-400 hover:bg-red-500 px-3 py-1 rounded text-xs">삭제</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
 
-function resetData() {
-  if(confirm("모든 데이터를 초기화할까요?")) {
-    state = { orders: [], wip: {}, tapes: {}, logs: [] };
-    save();
-  }
-}
-
-window.onload = render;
+    // 초기 실행
+    // 오늘 날짜를 기본값으로 설정
+    document.getElementById('inputDate').valueAsDate = new Date();
+    render();
 </script>
+
 </body>
 </html>
