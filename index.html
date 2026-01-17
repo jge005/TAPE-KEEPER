@@ -6,167 +6,65 @@
   <title>TAPE KEEPER - 통합 공정 관리</title>
   <style>
     :root{
-      --bg:#f7f7fb;
-      --card:#ffffff;
-      --ink:#1f2430;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --pri:#6d5efc;
-      --ok:#10b981;
-      --warn:#f59e0b;
-      --bad:#ef4444;
-      --shadow:0 10px 25px rgba(15,23,42,.08);
-      --r:16px;
-      --pad:14px;
+      --bg:#f7f7fb; --card:#ffffff; --ink:#1f2430; --muted:#6b7280; --line:#e5e7eb;
+      --pri:#6d5efc; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+      --shadow:0 10px 25px rgba(15,23,42,.08); --r:16px; --pad:14px;
     }
     *{box-sizing:border-box}
     body{
       margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
-      color:var(--ink);
-      background:linear-gradient(140deg,#f7f7fb,#f2f0ff,#fff6fb);
+      color:var(--ink); background:linear-gradient(140deg,#f7f7fb,#f2f0ff,#fff6fb);
     }
-    header{
-      position:sticky; top:0; z-index:5;
-      backdrop-filter:saturate(140%) blur(10px);
-      background:rgba(255,255,255,.72);
-      border-bottom:1px solid var(--line);
-    }
+    header{ position:sticky; top:0; z-index:5; backdrop-filter:saturate(140%) blur(10px); background:rgba(255,255,255,.72); border-bottom:1px solid var(--line); }
     .wrap{max-width:1180px; margin:0 auto; padding:16px 16px 28px}
     .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between}
     .brand{display:flex; gap:10px; align-items:center}
-    .logo{
-      width:42px; height:42px; border-radius:14px;
-      background:linear-gradient(145deg,#6d5efc,#ff5fa2);
-      box-shadow:var(--shadow);
-    }
+    .logo{ width:42px; height:42px; border-radius:14px; background:linear-gradient(145deg,#6d5efc,#ff5fa2); box-shadow:var(--shadow); }
     h1{font-size:18px; margin:0}
     .sub{font-size:12px; color:var(--muted); margin-top:2px}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px; border:1px solid var(--line);
-      border-radius:999px; background:#fff; box-shadow:0 6px 18px rgba(15,23,42,.05);
-      font-size:12px; color:var(--muted);
-    }
-    .tabs{
-      display:flex; gap:8px; flex-wrap:wrap;
-      margin-top:14px;
-    }
-    .tab{
-      cursor:pointer; user-select:none;
-      padding:10px 12px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.85);
-      border-radius:999px;
-      font-size:13px;
-    }
-    .tab.active{
-      border-color:rgba(109,94,252,.35);
-      box-shadow:0 10px 24px rgba(109,94,252,.12);
-      background:#fff;
-      color:var(--pri);
-      font-weight:700;
-    }
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:999px; background:#fff; box-shadow:0 6px 18px rgba(15,23,42,.05); font-size:12px; color:var(--muted); }
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+    .tab{ cursor:pointer; user-select:none; padding:10px 12px; border:1px solid var(--line); background:rgba(255,255,255,.85); border-radius:999px; font-size:13px; }
+    .tab.active{ border-color:rgba(109,94,252,.35); box-shadow:0 10px 24px rgba(109,94,252,.12); background:#fff; color:var(--pri); font-weight:700; }
     .grid{display:grid; grid-template-columns: 1fr; gap:14px; margin-top:14px}
     @media(min-width:980px){ .grid.two{grid-template-columns: 1.2fr .8fr} }
-    @media(min-width:980px){ .grid.three{grid-template-columns: 1fr 1fr 1fr} }
-    .card{
-      background:rgba(255,255,255,.92);
-      border:1px solid var(--line);
-      border-radius:var(--r);
-      box-shadow:var(--shadow);
-      padding:var(--pad);
-    }
+    .card{ background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:var(--pad); }
     .card h2{font-size:14px; margin:0 0 10px}
     .muted{color:var(--muted)}
     .row{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end}
     .field{display:flex; flex-direction:column; gap:6px; min-width:160px; flex:1}
     label{font-size:12px; color:var(--muted)}
-    input, select, textarea{
-      width:100%;
-      padding:10px 10px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:#fff;
-      outline:none;
-      font-size:13px;
-    }
-    textarea{min-height:84px; resize:vertical}
-    .btns{display:flex; gap:8px; flex-wrap:wrap}
-    button{
-      cursor:pointer;
-      border:1px solid var(--line);
-      background:#fff;
-      padding:10px 12px;
-      border-radius:12px;
-      font-size:13px;
-    }
-    button.primary{
-      background:var(--pri); border-color:rgba(109,94,252,.35);
-      color:#fff; font-weight:700;
-      box-shadow:0 10px 24px rgba(109,94,252,.20);
-    }
+    input, select, textarea{ width:100%; padding:10px 10px; border:1px solid var(--line); border-radius:12px; background:#fff; outline:none; font-size:13px; }
+    button{ cursor:pointer; border:1px solid var(--line); background:#fff; padding:10px 12px; border-radius:12px; font-size:13px; }
+    button.primary{ background:var(--pri); border-color:rgba(109,94,252,.35); color:#fff; font-weight:700; box-shadow:0 10px 24px rgba(109,94,252,.20); }
     button.danger{ background:var(--bad); color:#fff; border-color:rgba(239,68,68,.3); }
-    button.ghost{ background:transparent; }
     .kpi{display:flex; gap:10px; flex-wrap:wrap}
-    .k{
-      flex:1; min-width:170px;
-      padding:12px; border:1px solid var(--line);
-      border-radius:14px; background:#fff;
-    }
+    .k{ flex:1; min-width:170px; padding:12px; border:1px solid var(--line); border-radius:14px; background:#fff; }
     .k .t{font-size:12px; color:var(--muted)}
     .k .v{font-size:18px; font-weight:800; margin-top:6px}
-    .badge{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:5px 8px; border-radius:999px; font-size:12px;
-      border:1px solid var(--line); background:#fff;
-    }
-    .b-ok{ border-color:rgba(16,185,129,.25); color:var(--ok); }
-    .b-warn{ border-color:rgba(245,158,11,.25); color:var(--warn); }
-    .b-bad{ border-color:rgba(239,68,68,.25); color:var(--bad); }
     table{width:100%; border-collapse:separate; border-spacing:0; font-size:13px}
     th,td{padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:top}
     th{font-size:12px; color:var(--muted); text-align:left; background:rgba(249,250,251,.7); position:sticky; top:0}
     .tableWrap{max-height:360px; overflow:auto; border:1px solid var(--line); border-radius:14px}
     .right{ text-align:right }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
     .hidden{display:none !important}
-    .split{display:flex; gap:10px; flex-wrap:wrap}
-    .split > *{flex:1; min-width:260px}
-    @media print{
-      header, .noPrint{display:none !important}
-      body{background:#fff}
-      .card{box-shadow:none}
-      .tableWrap{max-height:none; overflow:visible}
-      th{position:static}
-    }
+    @media print{ header, .noPrint{display:none !important} body{background:#fff} .card{box-shadow:none} .tableWrap{max-height:none; overflow:visible} }
   </style>
 </head>
 <body>
 <header>
   <div class="wrap">
     <div class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>TAPE KEEPER</h1>
-          <div class="sub">자재·재공·발주·세트(LOT)·작업일지 자동화</div>
-        </div>
-      </div>
-      <div class="row" style="justify-content:flex-end; gap:8px">
-        <div class="pill"><span>저장</span><b id="saveState" class="mono">Local</b></div>
-        <button class="ghost" id="btnExport">CSV 내보내기</button>
-        <button class="ghost" id="btnPrint">오늘 작업일지 인쇄</button>
-        <button class="danger" id="btnReset">초기화(주의)</button>
-      </div>
+      <div class="brand"><div class="logo"></div><div><h1>TAPE KEEPER</h1><div class="sub">자재·재공·발주·세트(LOT)·작업일지 자동화</div></div></div>
+      <div class="row"><div class="pill"><span>저장</span><b id="saveState" class="mono">Local</b></div><button class="danger" id="btnReset">초기화</button></div>
     </div>
     <div class="tabs noPrint" id="tabs">
       <div class="tab active" data-tab="dash">대시보드</div>
       <div class="tab" data-tab="materials">자재(원단/실무)</div>
-      <div class="tab" data-tab="products">제품·재공(WIP)·포장실</div>
+      <div class="tab" data-tab="products">제품·재공(WIP)</div>
       <div class="tab" data-tab="orders">발주·계획(세트/LOT)</div>
       <div class="tab" data-tab="exec">작업 실행·일지</div>
-      <div class="tab" data-tab="logs">작업일지(전체)</div>
-      <div class="tab" data-tab="settings">매핑/설정</div>
     </div>
   </div>
 </header>
@@ -174,22 +72,8 @@
 <main class="wrap">
   <section id="tab-dash" class="tabPage">
     <div class="grid two">
-      <div class="card">
-        <h2>오늘 요약</h2>
-        <div class="kpi" id="kpis"></div>
-        <div style="margin-top:10px" class="muted">※ 달성률은 <b>발주(납기일)</b> 단위로 계산됨.</div>
-      </div>
-      <div class="card">
-        <h2>원단 발주 예측</h2>
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr><th>테이프</th><th class="right">가용재고</th><th class="right">남은 필요량</th><th>상태</th><th>부족 예상</th></tr>
-            </thead>
-            <tbody id="forecastBody"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="card"><h2>오늘 요약</h2><div class="kpi" id="kpis"></div></div>
+      <div class="card"><h2>원단 발주 예측</h2><div class="tableWrap"><table><thead><tr><th>테이프</th><th>규격</th><th class="right">가용재고</th><th>상태</th></tr></thead><tbody id="forecastBody"></tbody></table></div></div>
     </div>
   </section>
 
@@ -198,116 +82,54 @@
       <div class="card">
         <h2>발주 등록 (Order Master)</h2>
         <div class="row">
-          <div class="field">
-            <label>발주명</label>
-            <input id="ord_title" placeholder="예: 1/24 납기 7125Y" />
-          </div>
-          <div class="field">
-            <label>목표 합계(EA)</label>
-            <input id="ord_qty" type="number" min="0" placeholder="예: 2000" />
-          </div>
-          <div class="field">
-            <label>납기일</label>
-            <input id="ord_due" type="date" />
-          </div>
-          <div class="field">
-            <label>메모(선택)</label>
-            <input id="ord_memo" placeholder="특이사항" />
-          </div>
-          <div class="btns">
-            <button class="primary" id="ord_add">발주 생성</button>
-          </div>
+          <div class="field"><label>발주명</label><input id="ord_title" placeholder="예: 7125Y 2000개" /></div>
+          <div class="field"><label>목표 수량(EA)</label><input id="ord_goal_input" type="number" placeholder="2000" /></div>
+          <div class="field"><label>납기일</label><input id="ord_due" type="date" /></div>
+          <div class="btns"><button class="primary" id="ord_add">발주 생성</button></div>
         </div>
-        <div style="margin-top:10px" class="tableWrap">
-          <table>
-            <thead>
-              <tr><th>납기</th><th>발주명</th><th class="right">목표합</th><th class="right">완료</th><th>달성률</th><th class="right">삭제</th></tr>
-            </thead>
-            <tbody id="ord_table"></tbody>
-          </table>
+        <div class="tableWrap" style="margin-top:10px">
+          <table><thead><tr><th>납기</th><th>발주명</th><th class="right">목표</th><th class="right">완료</th><th>삭제</th></tr></thead><tbody id="ord_table"></tbody></table>
         </div>
       </div>
       <div class="card">
         <h2>세트/LOT 계획 (Execution Plan)</h2>
         <div class="row">
           <div class="field"><label>발주 선택</label><select id="set_order"></select></div>
-          <div class="field"><label>발행 LOT</label><input id="set_lot" placeholder="예: A-0120-1" /></div>
-          <div class="field"><label>작업 예정일</label><input id="set_planDate" type="date" /></div>
+          <div class="field"><label>제품명</label><input id="set_product_input" oninput="autoMatchHint()" placeholder="제품번호 입력" /></div>
+          <div class="field"><label>수량(EA)</label><input id="set_qty" type="number" /></div>
         </div>
         <div class="row" style="margin-top:10px">
-          <div class="field"><label>제품 선택</label><select id="set_product" onchange="autoMatchHint()"></select></div>
-          <div class="field"><label>수량(EA)</label><input id="set_qty" type="number" min="0" /></div>
-          <div class="field"><label>자동 매칭(테이프/배열수)</label><input id="set_auto" disabled /></div>
+          <div class="field"><label>자동 매칭 정보</label><input id="set_auto_hint" disabled style="color:var(--pri); font-weight:bold" /></div>
           <div class="btns"><button class="primary" id="set_add">세트 추가</button></div>
         </div>
-        <div style="margin-top:10px" class="tableWrap">
-          <table>
-            <thead>
-              <tr><th>LOT</th><th>예정일</th><th>제품</th><th class="right">계획수량</th><th>테이프</th><th class="right">완료</th><th class="right">삭제</th></tr>
-            </thead>
-            <tbody id="set_table"></tbody>
-          </table>
-        </div>
+        <div class="tableWrap" style="margin-top:10px"><table><tbody id="set_table"></tbody></table></div>
       </div>
     </div>
   </section>
 
-  <section id="tab-materials" class="tabPage hidden">
-      <div class="grid two">
-          <div class="card">
-              <h2>원단 재고 (Raw Material)</h2>
-              <div class="row">
-                  <div class="field"><label>테이프 코드</label><input id="rm_code" /></div>
-                  <div class="field"><label>수량</label><input id="rm_qty" type="number" /></div>
-                  <div class="btns"><button class="primary" id="rm_add">입고</button></div>
-              </div>
-              <div class="tableWrap"><table id="rm_table"></table></div>
-          </div>
-          <div class="card">
-              <h2>실무 테이프 재고 (Processed Stock)</h2>
-              <div class="row">
-                  <div class="field"><label>테이프 코드</label><input id="ps_code" /></div>
-                  <div class="field"><label>입고분</label><input id="ps_in" type="number" /></div>
-                  <div class="btns"><button class="primary" id="ps_add">실무입고</button></div>
-              </div>
-              <div class="tableWrap"><table id="ps_table"></table></div>
-          </div>
-      </div>
-  </section>
-  <section id="tab-products" class="tabPage hidden">
-      <div class="card"><h2>WIP / 포장실 재고 관리</h2><div id="wip_table"></div></div>
-  </section>
-  <section id="tab-exec" class="tabPage hidden">
-      <div class="card"><h2>작업 실행</h2><div id="ex_result"></div></div>
-  </section>
-  <section id="tab-logs" class="tabPage hidden">
-      <div class="card"><h2>전체 로그</h2><div id="logs_table"></div></div>
-  </section>
-  <section id="tab-settings" class="tabPage hidden">
-      <div class="card"><h2>설정 및 매핑</h2><div id="map_table"></div></div>
-  </section>
+  <section id="tab-materials" class="tabPage hidden"><div class="card"><h2>자재 관리</h2><div class="tableWrap"><table id="rm_table"></table></div></div></section>
+  <section id="tab-products" class="tabPage hidden"><div class="card"><h2>제품 재고</h2><div class="tableWrap"><table id="wip_table"></table></div></div></section>
+  <section id="tab-exec" class="tabPage hidden"><div class="card"><h2>작업 실행</h2><div id="ex_result"></div></div></section>
 </main>
 
 <script>
 const Store = {
-  key: "TAPE_KEEPER_V1",
-  load(){ try{ return JSON.parse(localStorage.getItem(this.key)); }catch(e){ return null; } },
+  key: "TAPE_KEEPER_V2",
+  load(){ return JSON.parse(localStorage.getItem(this.key)) || seedState(); },
   save(state){ localStorage.setItem(this.key, JSON.stringify(state)); }
 };
 
-let state = Store.load() || seedState();
-
 function seedState(){
   return {
-    materialsRaw: { "6855": 50, "6405": 30 },
-    materialsProcessed: { "6855": 100, "6405": 50 },
-    wip: {}, pack: {}, printers: ["봉련", "영숙", "다예"],
-    // 우리가 정리한 원단 규격(tapeMeta)과 매핑 규칙(map)
+    materialsRaw: {"6855": 10, "RR7000": 5},
+    materialsProcessed: {"6855": 500},
+    wip: {}, pack: {}, orders: [], sets: [], logs: [],
+    // 사용자님이 알려주신 마스터 규격 데이터
     tapeMeta: {
       "6855": {size: "450x237", type: "필름"},
       "6405": {size: "470x130", type: "종이"},
       "6406": {size: "470x130", type: "종이"},
-      "RR7000": {size: "510x295", type: "통합원단"},
+      "RR7000": {size: "510x295", type: "통합"},
       "5869": {size: "410x315", type: "필름"},
       "6491": {size: "450x120", type: "종이"},
       "4195": {size: "470x237", type: "필름"},
@@ -316,74 +138,88 @@ function seedState(){
       "6934": {size: "510x195", type: "필름"}
     },
     map: {
-      "6855": {tapeCode:"6855", arrayCount:8},
-      "7125": {tapeCode:"6855", arrayCount:8},
-      "6405": {tapeCode:"6405", arrayCount:2},
-      "6907": {tapeCode:"RR7000", arrayCount:2},
-      "6908": {tapeCode:"RR7000", arrayCount:2},
-      "5869": {tapeCode:"5869", arrayCount:4},
-      "4221": {tapeCode:"4221", arrayCount:4},
-      "7011": {tapeCode:"7011", arrayCount:1}
-    },
-    orders: [], sets: [], logs: []
+      "6855": {tape: "6855", arr: 8}, "7125": {tape: "6855", arr: 8},
+      "6405": {tape: "6405", arr: 2}, "6406": {tape: "6406", arr: 2},
+      "6907": {tape: "RR7000", arr: 2}, "6908": {tape: "RR7000", arr: 2},
+      "5869": {tape: "5869", arr: 4}, "6491": {tape: "6491", arr: 4},
+      "4195": {tape: "4195", arr: 4}, "4221": {tape: "4221", arr: 4},
+      "7011": {tape: "7011", arr: 1}, "6934": {tape: "6934", arr: 4}
+    }
   };
 }
 
-const $ = (id)=>document.getElementById(id);
-const n = (v)=> Number(v||0);
+let state = Store.load();
+const $ = (id) => document.getElementById(id);
 
-// --- 자동 매핑 힌트 (제품명 키워드 찾기) ---
+function renderAll(){
+  renderOrders();
+  renderDash();
+}
+
 function autoMatchHint(){
-  const prod = $("set_product").value;
-  if(!prod) return;
-  // 이름에 포함된 키워드로 테이프 찾기
-  const key = Object.keys(state.map).find(k => prod.includes(k));
-  if(key){
-    const m = state.map[key];
-    const meta = state.tapeMeta[m.tapeCode]?.size || "";
-    $("set_auto").value = `${m.tapeCode} (${meta}) / 배열수 ${m.arrayCount}`;
-  } else {
-    $("set_auto").value = "(매핑 없음)";
-  }
+  const val = $("set_product_input").value;
+  const matchKey = Object.keys(state.map).find(k => val.includes(k));
+  if(matchKey){
+    const m = state.map[matchKey];
+    const size = state.tapeMeta[m.tape].size;
+    $("set_auto_hint").value = `${m.tape} (${size}) / 배열수: ${m.arr}`;
+  } else { $("set_auto_hint").value = ""; }
 }
 
 function renderOrders(){
-  $("ord_table").innerHTML = state.orders.map(o => {
-    const rate = o.target > 0 ? (o.completed / o.target * 100) : 0;
-    return `<tr><td>${o.due}</td><td><b>${o.title}</b></td><td class="right mono">${o.target.toLocaleString()}</td><td class="right mono">${o.completed}</td><td>${rate.toFixed(1)}%</td><td class="right"><button class="danger" onclick="delOrder('${o.id}')">삭제</button></td></tr>`;
-  }).join("");
+  $("ord_table").innerHTML = state.orders.map(o => `
+    <tr>
+      <td>${o.due}</td><td><b>${o.title}</b></td>
+      <td class="right">${o.goal.toLocaleString()}</td>
+      <td class="right">${o.done.toLocaleString()}</td>
+      <td><button class="danger" onclick="delOrd('${o.id}')">삭제</button></td>
+    </tr>
+  `).join("");
   
-  // 세트 등록의 발주 선택창 업데이트
-  $("set_order").innerHTML = `<option value="">(선택)</option>` + state.orders.map(o=>`<option value="${o.id}">${o.title}</option>`).join("");
-  // 제품 선택창 업데이트
-  const prods = ["7125Y", "6855Q", "6405J", "6907A", "6908C", "5869A", "4221A", "7011A", "6491P"];
-  $("set_product").innerHTML = `<option value="">(선택)</option>` + prods.map(p=>`<option value="${p}">${p}</option>`).join("");
+  $("set_order").innerHTML = '<option value="">(선택)</option>' + 
+    state.orders.map(o => `<option value="${o.id}">${o.title}</option>`).join("");
 }
 
-// 발주 생성 (수량 포함)
-$("ord_add").onclick = ()=>{
+function renderDash(){
+  const codes = Object.keys(state.tapeMeta);
+  $("forecastBody").innerHTML = codes.map(c => `
+    <tr>
+      <td><b>${c}</b></td><td>${state.tapeMeta[c].size}</td>
+      <td class="right">${(state.materialsProcessed[c] || 0).toLocaleString()}</td>
+      <td><span class="pill">확인중</span></td>
+    </tr>
+  `).join("");
+}
+
+// 발주 생성 버튼 이벤트
+$("ord_add").onclick = () => {
   const title = $("ord_title").value;
-  const target = n($("ord_qty").value);
+  const goal = parseInt($("ord_goal_input").value || 0);
   const due = $("ord_due").value;
-  if(!title || target <= 0) return alert("발주명과 수량을 입력해줘.");
-  
-  state.orders.push({ id: Date.now().toString(), title, target, completed: 0, due, items:{} });
-  Store.save(state); renderOrders();
-  $("ord_title").value = ""; $("ord_qty").value = "";
+  if(!title || goal <= 0) return alert("발주명과 수량을 입력해줘!");
+
+  state.orders.push({ id: Date.now().toString(), title, goal, done: 0, due });
+  Store.save(state);
+  $("ord_title").value = ""; $("ord_goal_input").value = "";
+  renderOrders();
 };
 
-// --- 초기 실행 ---
-document.querySelectorAll(".tab").forEach(t => {
-  t.onclick = (e) => {
-    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-    t.classList.add("active");
-    document.querySelectorAll(".tabPage").forEach(p=>p.classList.add("hidden"));
-    $("tab-"+t.dataset.tab).classList.remove("hidden");
-    renderOrders();
-  };
-});
+function delOrd(id){
+  state.orders = state.orders.filter(o => o.id !== id);
+  Store.save(state); renderOrders();
+}
 
-renderOrders();
+document.getElementById("tabs").onclick = (e) => {
+  const t = e.target.closest(".tab");
+  if(!t) return;
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+  t.classList.add("active");
+  document.querySelectorAll(".tabPage").forEach(p => p.classList.add("hidden"));
+  $("tab-" + t.dataset.tab).classList.remove("hidden");
+  renderAll();
+};
+
+window.onload = renderAll;
 </script>
 </body>
 </html>
