@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAPE KEEPER - Final Structure</title>
+    <title>TAPE KEEPER - Final 1:1 Logic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: sans-serif; background-color: #f1f5f9; padding: 20px; }
@@ -78,7 +78,6 @@
                 <div class="space-y-4">
                     <div><label class="text-xs text-gray-500 font-bold">1. 작업할 세트</label><select id="workProductSelect" class="bg-gray-50 border-2 border-green-200 p-2 rounded w-full"></select></div>
                     <div><label class="text-xs text-gray-500 font-bold">2. 작업 수량 (EA)</label><input type="number" id="workAmount" placeholder="0" class="border-2 border-green-200 focus:border-green-500 p-2 rounded w-full"></div>
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200"><div id="predictionBox" class="text-xs text-gray-500">세트를 선택하세요.</div></div>
                     <button id="btnDoWork" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg shadow-md">작업 완료</button>
                     <div id="workResultMsg" class="p-3 bg-green-50 text-green-800 text-sm font-bold rounded text-center hidden"></div>
                 </div>
@@ -89,7 +88,7 @@
     <div id="rawTab" class="hidden">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="card lg:col-span-1 border-t-4 border-pink-500">
-                <h2 class="text-lg font-bold mb-4 text-pink-900">📥 원단 입고</h2>
+                <h2 class="text-lg font-bold mb-4 text-pink-900">📥 원단 입고 (롤 단위)</h2>
                 <div class="space-y-4">
                     <div>
                         <label class="text-xs text-gray-500">규격 (코드)</label>
@@ -116,7 +115,7 @@
             <div class="card lg:col-span-2">
                 <h2 class="text-lg font-bold mb-4">📊 원단 재고 현황</h2>
                 <div class="overflow-x-auto">
-                    <table><thead><tr><th>규격 (코드)</th><th class="text-right">재고 (장)</th><th class="text-center">관리</th></tr></thead><tbody id="rawListBody"></tbody></table>
+                    <table><thead><tr><th>규격 (코드)</th><th class="text-right">재고 (장)</th><th class="text-center">상태</th></tr></thead><tbody id="rawListBody"></tbody></table>
                 </div>
             </div>
         </div>
@@ -125,19 +124,23 @@
     <div id="realTab" class="hidden">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="card lg:col-span-1 border-t-4 border-purple-500">
-                <h2 class="text-lg font-bold mb-4 text-purple-900">✂️ 실무/부자재 입고</h2>
+                <h2 class="text-lg font-bold mb-4 text-purple-900">✂️ 실무(컷팅) 입고</h2>
+                <div class="p-3 bg-purple-50 text-xs text-purple-800 rounded mb-4">
+                    📢 여기 입력한 장수만큼 <b>원단이 똑같이(1:1) 차감</b>됩니다.
+                </div>
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs text-gray-500">품목명</label>
-                        <input type="text" id="realNameInput" placeholder="예: 김치(우), 고데기, 6855" list="realSuggestions">
+                        <label class="text-xs text-gray-500">품목명 (키워드)</label>
+                        <input type="text" id="realNameInput" placeholder="예: 6855, 김치(우)" list="realSuggestions">
                         <datalist id="realSuggestions">
                             <option value="6855"><option value="김치(좌)"><option value="김치(우)">
-                            <option value="기본(좌)"><option value="기본(우)"><option value="고데기">
-                            <option value="공청기"><option value="파종기"><option value="SPIN">
+                            <option value="기본(좌)"><option value="기본(우)"><option value="6405">
+                            <option value="5869"><option value="4221"><option value="7011">
+                            <option value="고데기"><option value="공청기"><option value="파종기">
                         </datalist>
                     </div>
-                    <div><label class="text-xs text-gray-500">입고 수량 (개)</label><input type="number" id="realQtyInput" placeholder="0"></div>
-                    <button id="btnAddReal" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 rounded-lg">실무 재고 추가</button>
+                    <div><label class="text-xs text-gray-500">입고 수량 (장/Sheet)</label><input type="number" id="realQtyInput" placeholder="0"></div>
+                    <button id="btnAddReal" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 rounded-lg">실무 입고 (원단 차감)</button>
                 </div>
             </div>
             <div class="card lg:col-span-2">
@@ -164,17 +167,33 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // --- 매핑: 실무이름 -> 원단규격 (이젠 1:1이므로 arr는 무시하고 raw만 참조) ---
+    const RAW_MAPPING = {
+        "6855": { raw: "450x237 (6855)" },
+        "7125": { raw: "450x237 (6855)" },
+        "6405": { raw: "470x130 (6405)" },
+        "6406": { raw: "470x130 (6406)" },
+        "김치": { raw: "510x295 (RR7000)" },
+        "기본": { raw: "510x295 (RR7000)" },
+        "6907": { raw: "510x295 (RR7000)" },
+        "6908": { raw: "510x295 (RR7000)" },
+        "RR7000": { raw: "510x295 (RR7000)" },
+        "5869": { raw: "410x315 (5869)" },
+        "6491": { raw: "450x120 (6491)" },
+        "4195": { raw: "470x237 (4195)" },
+        "4221": { raw: "195x385 (4221)" },
+        "7011": { raw: "550x315 (7011)" },
+        "6934": { raw: "510x195 (6934)" }
+    };
+
     let orders = [], wip = [], rawMaterials = {}, realMaterials = {};
 
-    // 로딩 숨김
     onSnapshot(query(collection(db, "orders")), (snap) => { orders = snap.docs.map(d => ({id:d.id, ...d.data()})); renderOrders(); document.getElementById('loading').style.display='none'; });
     onSnapshot(query(collection(db, "wip")), (snap) => { wip = snap.docs.map(d => ({id:d.id, ...d.data()})); renderWip(); });
     onSnapshot(query(collection(db, "raw_materials")), (snap) => { rawMaterials={}; snap.docs.forEach(d=>{rawMaterials[d.id]=d.data()}); renderRaw(); });
     onSnapshot(query(collection(db, "real_materials")), (snap) => { realMaterials={}; snap.docs.forEach(d=>{realMaterials[d.id]=d.data()}); renderReal(); });
 
-    // --- 기능 함수 ---
-    
-    // [1] 발주
+    // --- 기능 ---
     window.addOrder = async () => {
         const date = document.getElementById('inputDate').value;
         const title = document.getElementById('inputTitle').value;
@@ -186,7 +205,6 @@
     window.deleteOrder = async(id) => { if(confirm('삭제?')) await deleteDoc(doc(db, "orders", id)); };
     window.updateOrder = async(id, f, v) => await updateDoc(doc(db, "orders", id), {[f]: f==='goal'?parseInt(v):v});
 
-    // [2] 세트(WIP)
     window.addWip = async () => {
         const name = document.getElementById('wipName').value;
         const lot = document.getElementById('wipLot').value;
@@ -197,63 +215,67 @@
     };
     window.deleteWip = async(id) => await deleteDoc(doc(db, "wip", id));
 
-    // [3] 원단 자재 (사이즈 메인)
     window.addRaw = async () => {
         let type = document.getElementById('rawTypeSelect').value;
         if(type === 'custom') type = document.getElementById('rawCustomInput').value;
         const qty = parseInt(document.getElementById('rawQtyInput').value);
-        
-        if(!type || !qty) return alert("규격과 수량을 입력하세요");
-        
-        const ref = doc(db, "raw_materials", type); // 문서 ID를 규격명으로 사용
+        if(!type || !qty) return alert("입력 확인");
+        const ref = doc(db, "raw_materials", type);
         const snap = await getDoc(ref);
         const cur = snap.exists() ? snap.data().qty : 0;
-        
         await setDoc(ref, { qty: cur + qty });
         document.getElementById('rawQtyInput').value='';
-        alert(`원단 [${type}] 입고 완료!`);
     };
     window.updateRaw = async(id, v) => await updateDoc(doc(db, "raw_materials", id), { qty: parseInt(v) });
 
-    // [4] 실무 자재 (이름 메인)
+    // [수정됨: 1:1 차감 로직]
     window.addReal = async () => {
         const name = document.getElementById('realNameInput').value.trim();
         const qty = parseInt(document.getElementById('realQtyInput').value);
         if(!name || !qty) return alert("품목명과 수량 확인");
 
-        const ref = doc(db, "real_materials", name);
-        const snap = await getDoc(ref);
-        const cur = snap.exists() ? snap.data().qty : 0;
+        // 1. 매핑 확인 (원단 차감)
+        const mapKey = Object.keys(RAW_MAPPING).find(k => name.includes(k));
+        if (mapKey) {
+            const m = RAW_MAPPING[mapKey];
+            // [수정] 나누기 없이 입력한 장수(qty) 그대로 차감
+            const rawNeeded = qty; 
+            
+            const rawRef = doc(db, "raw_materials", m.raw);
+            const rawSnap = await getDoc(rawRef);
+            const rawCur = rawSnap.exists() ? rawSnap.data().qty : 0;
+            
+            if (rawCur < rawNeeded) {
+                if(!confirm(`원단 [${m.raw}] 재고가 부족합니다! (필요: ${rawNeeded}, 보유: ${rawCur})\n무시하고 진행할까요?`)) return;
+            }
+            
+            const newRawQty = Math.max(0, rawCur - rawNeeded);
+            await setDoc(rawRef, { qty: newRawQty }, { merge: true });
+            alert(`✅ ${name} ${qty}장 입고됨.\n📉 원단 [${m.raw}] ${rawNeeded}장 차감됨. (1:1 차감)`);
+        } else {
+            alert(`✅ ${name} 입고됨. (매칭되는 원단 없음 - 차감 안함)`);
+        }
+
+        // 2. 실무 재고 증가
+        const realRef = doc(db, "real_materials", name);
+        const realSnap = await getDoc(realRef);
+        const realCur = realSnap.exists() ? realSnap.data().qty : 0;
+        await setDoc(realRef, { qty: realCur + qty });
         
-        await setDoc(ref, { qty: cur + qty });
         document.getElementById('realNameInput').value=''; document.getElementById('realQtyInput').value='';
     };
     window.updateReal = async(id, v) => await updateDoc(doc(db, "real_materials", id), { qty: parseInt(v) });
-
-    // [작업 실행]
-    window.autoMatchInfo = () => {
-        const sel = document.getElementById('workProductSelect').value;
-        const box = document.getElementById('predictionBox');
-        if(!sel) { box.innerText="세트를 선택하세요"; return; }
-        const set = wip.find(x => x.id == sel);
-        const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal).sort((a,b)=>new Date(a.date)-new Date(b.date));
-        if(targets.length > 0) box.innerText = `[${targets[0].date} ${targets[0].title}] 발주로 우선 배분됩니다.`;
-        else box.innerText = "매칭되는 발주가 없습니다 (재고만 차감)";
-    };
 
     window.doWork = async () => {
         const sel = document.getElementById('workProductSelect').value;
         const qty = parseInt(document.getElementById('workAmount').value);
         if(!sel || !qty) return alert("입력 확인");
-        
         const set = wip.find(x => x.id == sel);
         if(set.qty < qty) return alert("세트 재고 부족");
 
-        // 1. 세트 차감
         if(set.qty - qty === 0) await deleteDoc(doc(db, "wip", sel));
         else await updateDoc(doc(db, "wip", sel), { qty: set.qty - qty });
 
-        // 2. 발주 배분
         let remain = qty;
         const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal).sort((a,b)=>new Date(a.date)-new Date(b.date));
         for(const o of targets) {
@@ -263,12 +285,9 @@
             remain -= fill;
         }
 
-        // 3. 실무 자재 차감 (옵션 - 나중에 연동 가능)
-        // 일단은 제품 작업 완료만 처리
         document.getElementById('workResultMsg').innerText = `완료! ${set.name} ${qty}개 처리됨.`;
         document.getElementById('workResultMsg').classList.remove('hidden');
         document.getElementById('workAmount').value='';
-        window.autoMatchInfo();
     };
 
     // --- 렌더링 ---
@@ -277,16 +296,9 @@
         tbody.innerHTML = '';
         orders.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(o => {
             let pct = Math.round((o.done / o.goal) * 100);
-            tbody.innerHTML += `<tr>
-                <td><input type="date" value="${o.date}" onchange="updateOrder('${o.id}', 'date', this.value)" class="bg-transparent text-sm w-full"></td>
-                <td><div class="font-bold text-gray-800">${o.title}</div><div class="text-xs text-gray-500">${o.memo||''}</div></td>
-                <td><input type="number" value="${o.goal}" onchange="updateOrder('${o.id}', 'goal', this.value)" class="w-20 text-right border rounded px-1"></td>
-                <td><div class="flex justify-between text-xs mb-1"><span>${o.done.toLocaleString()}</span><span class="text-blue-600 font-bold">${pct}%</span></div><div class="progress-bar"><div class="progress-fill ${pct>=100?'bg-green-500':'bg-blue-500'}" style="width:${pct>100?100:pct}%"></div></div></td>
-                <td><button onclick="deleteOrder('${o.id}')" class="text-red-400 text-xs">삭제</button></td>
-            </tr>`;
+            tbody.innerHTML += `<tr><td><input type="date" value="${o.date}" onchange="updateOrder('${o.id}', 'date', this.value)" class="bg-transparent text-sm w-full"></td><td><div class="font-bold text-gray-800">${o.title}</div><div class="text-xs text-gray-500">${o.memo||''}</div></td><td><input type="number" value="${o.goal}" onchange="updateOrder('${o.id}', 'goal', this.value)" class="w-20 text-right border rounded px-1"></td><td><div class="flex justify-between text-xs mb-1"><span>${o.done.toLocaleString()}</span><span class="text-blue-600 font-bold">${pct}%</span></div><div class="progress-bar"><div class="progress-fill ${pct>=100?'bg-green-500':'bg-blue-500'}" style="width:${pct>100?100:pct}%"></div></div></td><td><button onclick="deleteOrder('${o.id}')" class="text-red-400 text-xs">삭제</button></td></tr>`;
         });
     }
-
     function renderWip() {
         const list = document.getElementById('wipList');
         const sel = document.getElementById('workProductSelect');
@@ -298,48 +310,38 @@
         });
         if(wip.find(x=>x.id==cur)) sel.value=cur;
     }
-
     function renderRaw() {
         const tbody = document.getElementById('rawListBody');
         tbody.innerHTML = '';
         Object.keys(rawMaterials).sort().forEach(k => {
-            tbody.innerHTML += `<tr><td class="font-bold text-gray-700">${k}</td><td class="text-right"><input type="number" value="${rawMaterials[k].qty}" onchange="updateRaw('${k}', this.value)" class="w-20 text-right border px-1"></td><td class="text-center text-xs text-gray-400">자동저장</td></tr>`;
+            tbody.innerHTML += `<tr><td class="font-bold text-gray-700">${k}</td><td class="text-right"><input type="number" value="${rawMaterials[k].qty}" onchange="updateRaw('${k}', this.value)" class="w-20 text-right border px-1"></td><td class="text-center text-xs text-gray-400">자동연동</td></tr>`;
         });
     }
-
     function renderReal() {
         const div = document.getElementById('realListBody');
         div.innerHTML = '';
         Object.keys(realMaterials).sort().forEach(k => {
-            div.innerHTML += `<div class="bg-purple-50 border border-purple-100 p-3 rounded flex flex-col justify-between"><div class="font-bold text-purple-900 mb-2">${k}</div><div class="flex justify-between items-center"><input type="number" value="${realMaterials[k].qty}" onchange="updateReal('${k}', this.value)" class="w-20 text-right border bg-white rounded px-1"><span class="text-xs text-gray-500">개</span></div></div>`;
+            div.innerHTML += `<div class="bg-purple-50 border border-purple-100 p-3 rounded flex flex-col justify-between"><div class="font-bold text-purple-900 mb-2">${k}</div><div class="flex justify-between items-center"><input type="number" value="${realMaterials[k].qty}" onchange="updateReal('${k}', this.value)" class="w-20 text-right border bg-white rounded px-1"><span class="text-xs text-gray-500">장/EA</span></div></div>`;
         });
     }
 
-    // 탭 로직
     const tabs = ['orderTab', 'workTab', 'rawTab', 'realTab'];
     tabs.forEach(t => document.getElementById('btn-'+t).addEventListener('click', ()=>{
         tabs.forEach(x => { document.getElementById(x).classList.add('hidden'); document.getElementById('btn-'+x).classList.remove('active'); });
         document.getElementById(t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active');
     }));
 
-    // 기타 입력창 토글
     document.getElementById('rawTypeSelect').addEventListener('change', function() {
         const input = document.getElementById('rawCustomInput');
-        if(this.value === 'custom') { input.classList.remove('hidden'); input.focus(); } 
-        else { input.classList.add('hidden'); }
+        if(this.value === 'custom') { input.classList.remove('hidden'); input.focus(); } else { input.classList.add('hidden'); }
     });
 
-    // 이벤트 리스너
     document.getElementById('btnAddOrder').addEventListener('click', window.addOrder);
     document.getElementById('btnAddWip').addEventListener('click', window.addWip);
     document.getElementById('btnAddRaw').addEventListener('click', window.addRaw);
     document.getElementById('btnAddReal').addEventListener('click', window.addReal);
     document.getElementById('btnDoWork').addEventListener('click', window.doWork);
-    document.getElementById('workProductSelect').addEventListener('change', window.autoMatchInfo);
-
-    // 날짜 초기화
     document.getElementById('inputDate').valueAsDate = new Date();
-
 </script>
 </body>
 </html>
