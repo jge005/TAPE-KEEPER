@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAPE KEEPER - Clean Rules</title>
+    <title>TAPE KEEPER - Mapping Update</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: sans-serif; background-color: #f1f5f9; padding: 20px; }
@@ -78,7 +78,6 @@
                 <div class="space-y-4">
                     <div><label class="text-xs text-gray-500 font-bold">1. 작업할 세트</label><select id="workProductSelect" class="bg-gray-50 border-2 border-green-200 p-2 rounded w-full"></select></div>
                     <div><label class="text-xs text-gray-500 font-bold">2. 작업 수량 (EA)</label><input type="number" id="workAmount" placeholder="0" class="border-2 border-green-200 focus:border-green-500 p-2 rounded w-full"></div>
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200"><div id="predictionBox" class="text-xs text-gray-500">세트를 선택하세요.</div></div>
                     <button id="btnDoWork" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg shadow-md">작업 완료</button>
                     <div id="workResultMsg" class="p-3 bg-green-50 text-green-800 text-sm font-bold rounded text-center hidden"></div>
                 </div>
@@ -107,7 +106,7 @@
                             <option value="510x195 (6934)">510x195 (6934)</option>
                             <option value="custom">기타 (직접입력)</option>
                         </select>
-                        <input type="text" id="rawCustomInput" class="mt-2 hidden bg-pink-50" placeholder="예: 300x300 (신규)">
+                        <input type="text" id="rawCustomInput" class="mt-2 hidden bg-pink-50" placeholder="예: 공청기, 300x300">
                     </div>
                     <div><label class="text-xs text-gray-500">입고 수량 (장)</label><input type="number" id="rawQtyInput" placeholder="0"></div>
                     <button id="btnAddRaw" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-lg">원단 추가</button>
@@ -132,7 +131,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="text-xs text-gray-500">품목명 (키워드)</label>
-                        <input type="text" id="realNameInput" placeholder="예: 김치(우), 6855" list="realSuggestions">
+                        <input type="text" id="realNameInput" placeholder="예: 공청기, 김치(우)" list="realSuggestions">
                         <datalist id="realSuggestions"></datalist>
                     </div>
                     <div><label class="text-xs text-gray-500">입고 수량 (장)</label><input type="number" id="realQtyInput" placeholder="0"></div>
@@ -151,21 +150,27 @@
                 <button onclick="resetRules()" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200">🔄 기본 규칙으로 초기화</button>
             </div>
             <div class="flex flex-col md:flex-row gap-2 mb-4 p-4 bg-gray-50 rounded">
-                <input type="text" id="mapKey" placeholder="실무 이름 (예: 김치(우))" class="flex-1">
-                <select id="mapRaw" class="flex-1 bg-white">
-                    <option value="450x237 (6855)">450x237 (6855)</option>
-                    <option value="470x130 (6405)">470x130 (6405)</option>
-                    <option value="470x130 (6406)">470x130 (6406)</option>
-                    <option value="510x295 (RR7000)">510x295 (RR7000)</option>
-                    <option value="410x315 (5869)">410x315 (5869)</option>
-                    <option value="450x120 (6491)">450x120 (6491)</option>
-                    <option value="470x237 (4195)">470x237 (4195)</option>
-                    <option value="195x385 (4221)">195x385 (4221)</option>
-                    <option value="550x315 (7011)">550x315 (7011)</option>
-                    <option value="510x195 (6934)">510x195 (6934)</option>
-                </select>
-                <input type="number" id="mapArr" placeholder="배열" class="w-24">
-                <button id="btnAddMap" class="bg-gray-700 text-white px-4 py-2 rounded font-bold">추가</button>
+                <input type="text" id="mapKey" placeholder="실무 이름 (예: 공청기)" class="flex-1">
+                
+                <div class="flex-1">
+                    <select id="mapRaw" class="w-full bg-white h-10 border rounded px-2">
+                        <option value="450x237 (6855)">450x237 (6855)</option>
+                        <option value="470x130 (6405)">470x130 (6405)</option>
+                        <option value="470x130 (6406)">470x130 (6406)</option>
+                        <option value="510x295 (RR7000)">510x295 (RR7000)</option>
+                        <option value="410x315 (5869)">410x315 (5869)</option>
+                        <option value="450x120 (6491)">450x120 (6491)</option>
+                        <option value="470x237 (4195)">470x237 (4195)</option>
+                        <option value="195x385 (4221)">195x385 (4221)</option>
+                        <option value="550x315 (7011)">550x315 (7011)</option>
+                        <option value="510x195 (6934)">510x195 (6934)</option>
+                        <option value="custom">기타 (직접입력)</option>
+                    </select>
+                    <input type="text" id="mapRawCustom" class="hidden w-full mt-1 border rounded px-2 h-10" placeholder="연결할 원단 이름 (예: 공청기)">
+                </div>
+
+                <input type="number" id="mapArr" placeholder="배열" class="w-24 h-10 border rounded px-2 text-center" value="1">
+                <button id="btnAddMap" class="bg-gray-700 text-white px-4 py-2 rounded font-bold h-10">추가</button>
             </div>
             <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-100"><th class="p-2 text-left">실무 이름 (제품)</th><th class="p-2 text-left">연결 원단 (Raw)</th><th class="p-2 text-center">배열</th><th class="p-2 text-center">관리</th></tr></thead><tbody id="mapListBody"></tbody></table></div>
         </div>
@@ -199,43 +204,25 @@
         if(Object.keys(mappings).length===0) seedMappings(); else { renderMappings(); updateDataList(); }
     });
 
-    // --- 초기화 및 리셋 (정리된 리스트) ---
     async function seedMappings() {
         const defaults = {
-            "김치(좌)": { raw: "510x295 (RR7000)", arr: 2 },
-            "김치(우)": { raw: "510x295 (RR7000)", arr: 2 },
-            "기본(좌)": { raw: "510x295 (RR7000)", arr: 2 },
-            "기본(우)": { raw: "510x295 (RR7000)", arr: 2 },
-            "6907": { raw: "510x295 (RR7000)", arr: 2 },
-            "6908": { raw: "510x295 (RR7000)", arr: 2 },
-            "6855": { raw: "450x237 (6855)", arr: 8 },
-            "7125": { raw: "450x237 (6855)", arr: 8 },
-            "6405": { raw: "470x130 (6405)", arr: 2 },
-            "6406": { raw: "470x130 (6406)", arr: 2 },
-            "5869": { raw: "410x315 (5869)", arr: 4 },
-            "6491": { raw: "450x120 (6491)", arr: 4 },
-            "2254D": { raw: "450x120 (6491)", arr: 4 },
-            "4195": { raw: "470x237 (4195)", arr: 4 },
-            "4221": { raw: "195x385 (4221)", arr: 4 },
-            "7011": { raw: "550x315 (7011)", arr: 1 },
+            "김치(좌)": { raw: "510x295 (RR7000)", arr: 2 }, "김치(우)": { raw: "510x295 (RR7000)", arr: 2 },
+            "기본(좌)": { raw: "510x295 (RR7000)", arr: 2 }, "기본(우)": { raw: "510x295 (RR7000)", arr: 2 },
+            "6907": { raw: "510x295 (RR7000)", arr: 2 }, "6908": { raw: "510x295 (RR7000)", arr: 2 },
+            "6855": { raw: "450x237 (6855)", arr: 8 }, "7125": { raw: "450x237 (6855)", arr: 8 },
+            "6405": { raw: "470x130 (6405)", arr: 2 }, "6406": { raw: "470x130 (6406)", arr: 2 },
+            "5869": { raw: "410x315 (5869)", arr: 4 }, "6491": { raw: "450x120 (6491)", arr: 4 },
+            "2254D": { raw: "450x120 (6491)", arr: 4 }, "4195": { raw: "470x237 (4195)", arr: 4 },
+            "4221": { raw: "195x385 (4221)", arr: 4 }, "7011": { raw: "550x315 (7011)", arr: 1 },
             "6934": { raw: "510x195 (6934)", arr: 4 }
         };
         const batch = writeBatch(db);
         for(const k in defaults) batch.set(doc(db, "mappings", k), defaults[k]);
         await batch.commit();
-        alert("규칙이 깔끔하게 초기화되었습니다!");
+        alert("초기화 완료!");
     }
 
-    window.resetRules = async () => {
-        if(confirm("지저분한 리스트를 싹 지우고, 기본값으로 되돌릴까요?")) {
-            // 기존 매핑 다 지우기
-            const batch = writeBatch(db);
-            Object.keys(mappings).forEach(k => batch.delete(doc(db, "mappings", k)));
-            await batch.commit();
-            // 새로 넣기
-            await seedMappings();
-        }
-    };
+    window.resetRules = async () => { if(confirm("초기화 할까요?")) { const batch = writeBatch(db); Object.keys(mappings).forEach(k => batch.delete(doc(db, "mappings", k))); await batch.commit(); await seedMappings(); } };
 
     // --- 기능 ---
     window.addOrder = async () => { const date = document.getElementById('inputDate').value; const title = document.getElementById('inputTitle').value; const goal = parseInt(document.getElementById('inputGoal').value); if(!date || !title || !goal) return alert("입력 확인"); await addDoc(collection(db, "orders"), { date, title, goal, memo: document.getElementById('inputMemo').value, done: 0 }); document.getElementById('inputTitle').value=''; document.getElementById('inputGoal').value=''; };
@@ -248,7 +235,19 @@
     window.addRaw = async () => { let type = document.getElementById('rawTypeSelect').value; if(type === 'custom') type = document.getElementById('rawCustomInput').value; const qty = parseInt(document.getElementById('rawQtyInput').value); if(!type || !qty) return alert("입력 확인"); const ref = doc(db, "raw_materials", type); const snap = await getDoc(ref); const cur = snap.exists() ? snap.data().qty : 0; await setDoc(ref, { qty: cur + qty }); document.getElementById('rawQtyInput').value=''; };
     window.updateRaw = async(id, v) => await updateDoc(doc(db, "raw_materials", id), { qty: parseInt(v) });
 
-    window.addMapping = async () => { const key = document.getElementById('mapKey').value.trim(); const raw = document.getElementById('mapRaw').value; const arr = parseInt(document.getElementById('mapArr').value); if(!key || !raw || !arr) return alert("입력 확인"); await setDoc(doc(db, "mappings", key), { raw, arr }); document.getElementById('mapKey').value=''; };
+    // [매핑 추가 수정됨]
+    window.addMapping = async () => {
+        const key = document.getElementById('mapKey').value.trim();
+        let raw = document.getElementById('mapRaw').value;
+        if (raw === 'custom') raw = document.getElementById('mapRawCustom').value.trim();
+        const arr = parseInt(document.getElementById('mapArr').value);
+        if(!key || !raw || !arr) return alert("모든 항목을 입력하세요");
+        await setDoc(doc(db, "mappings", key), { raw, arr });
+        document.getElementById('mapKey').value=''; 
+        // 입력창 초기화
+        document.getElementById('mapRaw').value = '450x237 (6855)';
+        document.getElementById('mapRawCustom').classList.add('hidden');
+    };
     window.deleteMapping = async (id) => await deleteDoc(doc(db, "mappings", id));
     window.updateMappingArr = async (id, val) => await updateDoc(doc(db, "mappings", id), { arr: parseInt(val) });
 
@@ -264,7 +263,7 @@
             const rawRef = doc(db, "raw_materials", rawTarget);
             const rawSnap = await getDoc(rawRef);
             const rawCur = rawSnap.exists() ? rawSnap.data().qty : 0;
-            const rawNeeded = qty;
+            const rawNeeded = qty; 
             if (rawCur < rawNeeded) { if(!confirm(`원단 [${rawTarget}] 재고 부족! (보유: ${rawCur})\n무시하고 진행?`)) return; }
             await setDoc(rawRef, { qty: Math.max(0, rawCur - rawNeeded) }, { merge: true });
             alert(`✅ ${name} 입고.\n📉 원단 [${rawTarget}] ${rawNeeded}장 차감.`);
@@ -321,6 +320,9 @@
     tabs.forEach(t => document.getElementById('btn-'+t).addEventListener('click', ()=>{ tabs.forEach(x => { document.getElementById(x).classList.add('hidden'); document.getElementById('btn-'+x).classList.remove('active'); }); document.getElementById(t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active'); }));
     document.getElementById('rawTypeSelect').addEventListener('change', function() { const input = document.getElementById('rawCustomInput'); if(this.value === 'custom') { input.classList.remove('hidden'); input.focus(); } else { input.classList.add('hidden'); } });
     
+    // 매핑 설정 내 원단 선택 토글
+    document.getElementById('mapRaw').addEventListener('change', function() { const input = document.getElementById('mapRawCustom'); if(this.value === 'custom') { input.classList.remove('hidden'); input.focus(); } else { input.classList.add('hidden'); } });
+
     document.getElementById('btnAddOrder').addEventListener('click', window.addOrder);
     document.getElementById('btnAddWip').addEventListener('click', window.addWip);
     document.getElementById('btnAddRaw').addEventListener('click', window.addRaw);
