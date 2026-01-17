@@ -94,55 +94,43 @@
       <div class="card">
         <h2>세트/LOT 계획 (Execution Plan)</h2>
         <div class="row">
-          <div class="field"><label>발주 선택</label><select id="set_order"></select></div>
-          <div class="field"><label>제품명</label><input id="set_product_input" oninput="autoMatchHint()" placeholder="제품번호 입력" /></div>
-          <div class="field"><label>수량(EA)</label><input id="set_qty" type="number" /></div>
+          <div class="field"><label>발주 선택</label><select id="set_order_select"></select></div>
+          <div class="field"><label>제품명</label><select id="set_product_select" onchange="autoMatchHint()"></select></div>
+          <div class="field"><label>발행 LOT</label><input id="set_lot_input" placeholder="A-0120-1" /></div>
         </div>
         <div class="row" style="margin-top:10px">
+          <div class="field"><label>수량(EA)</label><input id="set_qty_input" type="number" /></div>
           <div class="field"><label>자동 매칭 정보</label><input id="set_auto_hint" disabled style="color:var(--pri); font-weight:bold" /></div>
-          <div class="btns"><button class="primary" id="set_add">세트 추가</button></div>
+          <div class="btns"><button class="primary" id="set_add_btn">세트 추가</button></div>
         </div>
-        <div class="tableWrap" style="margin-top:10px"><table><tbody id="set_table"></tbody></table></div>
+        <div class="tableWrap" style="margin-top:10px">
+          <table><thead><tr><th>발주</th><th>LOT</th><th>제품</th><th class="right">수량</th><th>테이프</th><th class="right">삭제</th></tr></thead><tbody id="set_table"></tbody></table>
+        </div>
       </div>
     </div>
   </section>
-
-  <section id="tab-materials" class="tabPage hidden"><div class="card"><h2>자재 관리</h2><div class="tableWrap"><table id="rm_table"></table></div></div></section>
-  <section id="tab-products" class="tabPage hidden"><div class="card"><h2>제품 재고</h2><div class="tableWrap"><table id="wip_table"></table></div></div></section>
-  <section id="tab-exec" class="tabPage hidden"><div class="card"><h2>작업 실행</h2><div id="ex_result"></div></div></section>
 </main>
 
 <script>
 const Store = {
-  key: "TAPE_KEEPER_V2",
+  key: "TAPE_KEEPER_V3",
   load(){ return JSON.parse(localStorage.getItem(this.key)) || seedState(); },
   save(state){ localStorage.setItem(this.key, JSON.stringify(state)); }
 };
 
 function seedState(){
   return {
-    materialsRaw: {"6855": 10, "RR7000": 5},
-    materialsProcessed: {"6855": 500},
-    wip: {}, pack: {}, orders: [], sets: [], logs: [],
-    // 사용자님이 알려주신 마스터 규격 데이터
+    orders: [], sets: [],
     tapeMeta: {
-      "6855": {size: "450x237", type: "필름"},
-      "6405": {size: "470x130", type: "종이"},
-      "6406": {size: "470x130", type: "종이"},
-      "RR7000": {size: "510x295", type: "통합"},
-      "5869": {size: "410x315", type: "필름"},
-      "6491": {size: "450x120", type: "종이"},
-      "4195": {size: "470x237", type: "필름"},
-      "4221": {size: "195x385", type: "필름"},
-      "7011": {size: "550x315", type: "필름"},
-      "6934": {size: "510x195", type: "필름"}
+      "6855": {size: "450x237"}, "6405": {size: "470x130"}, "6406": {size: "470x130"},
+      "RR7000": {size: "510x295"}, "5869": {size: "410x315"}, "6491": {size: "450x120"},
+      "4195": {size: "470x237"}, "4221": {size: "195x385"}, "7011": {size: "550x315"}, "6934": {size: "510x195"}
     },
     map: {
-      "6855": {tape: "6855", arr: 8}, "7125": {tape: "6855", arr: 8},
-      "6405": {tape: "6405", arr: 2}, "6406": {tape: "6406", arr: 2},
-      "6907": {tape: "RR7000", arr: 2}, "6908": {tape: "RR7000", arr: 2},
-      "5869": {tape: "5869", arr: 4}, "6491": {tape: "6491", arr: 4},
-      "4195": {tape: "4195", arr: 4}, "4221": {tape: "4221", arr: 4},
+      "7125": {tape: "6855", arr: 8}, "6855": {tape: "6855", arr: 8}, "6405": {tape: "6405", arr: 2},
+      "24001W": {tape: "6406", arr: 2}, "21802Z": {tape: "6406", arr: 2}, "6491": {tape: "6491", arr: 4},
+      "2254D": {tape: "6491", arr: 4}, "4195": {tape: "4195", arr: 4}, "5869": {tape: "5869", arr: 4},
+      "6907": {tape: "RR7000", arr: 2}, "6908": {tape: "RR7000", arr: 2}, "4221": {tape: "4221", arr: 4},
       "7011": {tape: "7011", arr: 1}, "6934": {tape: "6934", arr: 4}
     }
   };
@@ -151,71 +139,63 @@ function seedState(){
 let state = Store.load();
 const $ = (id) => document.getElementById(id);
 
-function renderAll(){
-  renderOrders();
-  renderDash();
-}
-
 function autoMatchHint(){
-  const val = $("set_product_input").value;
-  const matchKey = Object.keys(state.map).find(k => val.includes(k));
+  const prod = $("set_product_select").value;
+  const matchKey = Object.keys(state.map).find(k => prod.includes(k));
   if(matchKey){
     const m = state.map[matchKey];
-    const size = state.tapeMeta[m.tape].size;
-    $("set_auto_hint").value = `${m.tape} (${size}) / 배열수: ${m.arr}`;
+    const meta = state.tapeMeta[m.tape].size;
+    $("set_auto_hint").value = `${m.tape} (${meta}) / 배열수 ${m.arr}`;
   } else { $("set_auto_hint").value = ""; }
 }
 
+function renderAll(){
+  renderOrders();
+  renderSets();
+}
+
 function renderOrders(){
-  $("ord_table").innerHTML = state.orders.map(o => `
-    <tr>
-      <td>${o.due}</td><td><b>${o.title}</b></td>
-      <td class="right">${o.goal.toLocaleString()}</td>
-      <td class="right">${o.done.toLocaleString()}</td>
-      <td><button class="danger" onclick="delOrd('${o.id}')">삭제</button></td>
-    </tr>
-  `).join("");
-  
-  $("set_order").innerHTML = '<option value="">(선택)</option>' + 
-    state.orders.map(o => `<option value="${o.id}">${o.title}</option>`).join("");
+  $("ord_table").innerHTML = state.orders.map(o => `<tr><td>${o.due}</td><td><b>${o.title}</b></td><td class="right">${o.goal.toLocaleString()}</td><td class="right">${o.done}</td><td><button class="danger" onclick="delOrd('${o.id}')">삭제</button></td></tr>`).join("");
+  $("set_order_select").innerHTML = '<option value="">(선택)</option>' + state.orders.map(o => `<option value="${o.id}">${o.title}</option>`).join("");
+  const prodList = ["7125Y", "6855Q", "6405J", "24001W", "6907A", "6908C", "5869A", "4221A", "7011A", "6491P"];
+  $("set_product_select").innerHTML = '<option value="">(선택)</option>' + prodList.map(p => `<option value="${p}">${p}</option>`).join("");
 }
 
-function renderDash(){
-  const codes = Object.keys(state.tapeMeta);
-  $("forecastBody").innerHTML = codes.map(c => `
-    <tr>
-      <td><b>${c}</b></td><td>${state.tapeMeta[c].size}</td>
-      <td class="right">${(state.materialsProcessed[c] || 0).toLocaleString()}</td>
-      <td><span class="pill">확인중</span></td>
-    </tr>
-  `).join("");
+function renderSets(){
+  $("set_table").innerHTML = state.sets.map(s => {
+    const o = state.orders.find(x => x.id === s.ordId);
+    return `<tr><td>${o?o.title:'-'}</td><td>${s.lot}</td><td>${s.prod}</td><td class="right">${s.qty.toLocaleString()}</td><td>${s.tape}</td><td class="right"><button class="danger" onclick="delSet('${s.id}')">삭제</button></td></tr>`;
+  }).join("");
 }
 
-// 발주 생성 버튼 이벤트
 $("ord_add").onclick = () => {
   const title = $("ord_title").value;
   const goal = parseInt($("ord_goal_input").value || 0);
   const due = $("ord_due").value;
-  if(!title || goal <= 0) return alert("발주명과 수량을 입력해줘!");
-
-  state.orders.push({ id: Date.now().toString(), title, goal, done: 0, due });
-  Store.save(state);
-  $("ord_title").value = ""; $("ord_goal_input").value = "";
-  renderOrders();
+  if(!title || goal <= 0) return alert("발주명과 목표 수량을 입력하세요!");
+  state.orders.push({ id: Date.now().toString(), title, goal, due, done: 0 });
+  Store.save(state); $("ord_title").value = ""; $("ord_goal_input").value = ""; renderAll();
 };
 
-function delOrd(id){
-  state.orders = state.orders.filter(o => o.id !== id);
-  Store.save(state); renderOrders();
-}
+$("set_add_btn").onclick = () => {
+  const ordId = $("set_order_select").value;
+  const prod = $("set_product_select").value;
+  const lot = $("set_lot_input").value;
+  const qty = parseInt($("set_qty_input").value || 0);
+  if(!ordId || !prod || qty <= 0) return alert("발주, 제품, 수량을 확인하세요!");
+  const matchKey = Object.keys(state.map).find(k => prod.includes(k));
+  const tape = matchKey ? state.map[matchKey].tape : "기타";
+  state.sets.push({ id: Date.now().toString(), ordId, prod, lot, qty, tape });
+  Store.save(state); $("set_lot_input").value = ""; $("set_qty_input").value = ""; renderAll();
+};
+
+function delOrd(id){ state.orders = state.orders.filter(o => o.id !== id); state.sets = state.sets.filter(s => s.ordId !== id); Store.save(state); renderAll(); }
+function delSet(id){ state.sets = state.sets.filter(s => s.id !== id); Store.save(state); renderAll(); }
 
 document.getElementById("tabs").onclick = (e) => {
-  const t = e.target.closest(".tab");
-  if(!t) return;
-  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-  t.classList.add("active");
-  document.querySelectorAll(".tabPage").forEach(p => p.classList.add("hidden"));
-  $("tab-" + t.dataset.tab).classList.remove("hidden");
+  const t = e.target.closest(".tab"); if(!t) return;
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active")); t.classList.add("active");
+  document.querySelectorAll(".tabPage").forEach(p => p.classList.add("hidden")); $("tab-" + t.dataset.tab).classList.remove("hidden");
   renderAll();
 };
 
