@@ -1,0 +1,1648 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TAPE KEEPER - 통합 공정 관리</title>
+  <style>
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --ink:#1f2430;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --pri:#6d5efc;
+      --ok:#10b981;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --shadow:0 10px 25px rgba(15,23,42,.08);
+      --r:16px;
+      --pad:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+      color:var(--ink);
+      background:linear-gradient(140deg,#f7f7fb,#f2f0ff,#fff6fb);
+    }
+    header{
+      position:sticky; top:0; z-index:5;
+      backdrop-filter:saturate(140%) blur(10px);
+      background:rgba(255,255,255,.72);
+      border-bottom:1px solid var(--line);
+    }
+    .wrap{max-width:1180px; margin:0 auto; padding:16px 16px 28px}
+    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between}
+    .brand{display:flex; gap:10px; align-items:center}
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      background:linear-gradient(145deg,#6d5efc,#ff5fa2);
+      box-shadow:var(--shadow);
+    }
+    h1{font-size:18px; margin:0}
+    .sub{font-size:12px; color:var(--muted); margin-top:2px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border:1px solid var(--line);
+      border-radius:999px; background:#fff; box-shadow:0 6px 18px rgba(15,23,42,.05);
+      font-size:12px; color:var(--muted);
+    }
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .tab{
+      cursor:pointer; user-select:none;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.85);
+      border-radius:999px;
+      font-size:13px;
+    }
+    .tab.active{
+      border-color:rgba(109,94,252,.35);
+      box-shadow:0 10px 24px rgba(109,94,252,.12);
+      background:#fff;
+      color:var(--pri);
+      font-weight:700;
+    }
+
+    .grid{display:grid; grid-template-columns: 1fr; gap:14px; margin-top:14px}
+    @media(min-width:980px){ .grid.two{grid-template-columns: 1.2fr .8fr} }
+    @media(min-width:980px){ .grid.three{grid-template-columns: 1fr 1fr 1fr} }
+
+    .card{
+      background:rgba(255,255,255,.92);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:var(--pad);
+    }
+    .card h2{font-size:14px; margin:0 0 10px}
+    .muted{color:var(--muted)}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end}
+    .field{display:flex; flex-direction:column; gap:6px; min-width:160px; flex:1}
+    label{font-size:12px; color:var(--muted)}
+    input, select, textarea{
+      width:100%;
+      padding:10px 10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      outline:none;
+      font-size:13px;
+    }
+    textarea{min-height:84px; resize:vertical}
+    .btns{display:flex; gap:8px; flex-wrap:wrap}
+    button{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background:#fff;
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:13px;
+    }
+    button.primary{
+      background:var(--pri); border-color:rgba(109,94,252,.35);
+      color:#fff; font-weight:700;
+      box-shadow:0 10px 24px rgba(109,94,252,.20);
+    }
+    button.danger{ background:var(--bad); color:#fff; border-color:rgba(239,68,68,.3); }
+    button.ghost{ background:transparent; }
+    .kpi{display:flex; gap:10px; flex-wrap:wrap}
+    .k{
+      flex:1; min-width:170px;
+      padding:12px; border:1px solid var(--line);
+      border-radius:14px; background:#fff;
+    }
+    .k .t{font-size:12px; color:var(--muted)}
+    .k .v{font-size:18px; font-weight:800; margin-top:6px}
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 8px; border-radius:999px; font-size:12px;
+      border:1px solid var(--line); background:#fff;
+    }
+    .b-ok{ border-color:rgba(16,185,129,.25); color:var(--ok); }
+    .b-warn{ border-color:rgba(245,158,11,.25); color:var(--warn); }
+    .b-bad{ border-color:rgba(239,68,68,.25); color:var(--bad); }
+
+    table{width:100%; border-collapse:separate; border-spacing:0; font-size:13px}
+    th,td{padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:top}
+    th{font-size:12px; color:var(--muted); text-align:left; background:rgba(249,250,251,.7); position:sticky; top:0}
+    .tableWrap{max-height:360px; overflow:auto; border:1px solid var(--line); border-radius:14px}
+    .right{ text-align:right }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+    .hidden{display:none !important}
+    .split{display:flex; gap:10px; flex-wrap:wrap}
+    .split > *{flex:1; min-width:260px}
+
+    /* 프린트(종이 작업일지 느낌) */
+    @media print{
+      header, .noPrint{display:none !important}
+      body{background:#fff}
+      .card{box-shadow:none}
+      .tableWrap{max-height:none; overflow:visible}
+      th{position:static}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>TAPE KEEPER</h1>
+          <div class="sub">자재·재공·발주·세트(LOT)·작업일지 자동화</div>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end; gap:8px">
+        <div class="pill"><span>저장</span><b id="saveState" class="mono">Local</b></div>
+        <button class="ghost" id="btnExport">CSV 내보내기</button>
+        <button class="ghost" id="btnPrint">오늘 작업일지 인쇄</button>
+        <button class="danger" id="btnReset">초기화(주의)</button>
+      </div>
+    </div>
+
+    <div class="tabs noPrint" id="tabs">
+      <div class="tab active" data-tab="dash">대시보드</div>
+      <div class="tab" data-tab="materials">자재(원단/실무)</div>
+      <div class="tab" data-tab="products">제품·재공(WIP)·포장실</div>
+      <div class="tab" data-tab="orders">발주·계획(세트/LOT)</div>
+      <div class="tab" data-tab="exec">작업 실행·일지</div>
+      <div class="tab" data-tab="logs">작업일지(전체)</div>
+      <div class="tab" data-tab="settings">매핑/설정</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- DASH -->
+  <section id="tab-dash" class="tabPage">
+    <div class="grid two">
+      <div class="card">
+        <h2>오늘 요약</h2>
+        <div class="kpi" id="kpis"></div>
+        <div style="margin-top:10px" class="muted">
+          ※ 달성률은 <b>발주(납기일)</b> 단위로 계산되고, 작업 완료 시 자동 업데이트됨.
+        </div>
+      </div>
+      <div class="card">
+        <h2>원단 발주 예측</h2>
+        <div class="muted" style="margin-bottom:8px">
+          등록된 세트(LOT) 계획 기준으로, 원단+실무 재고로 커버 가능한지 계산.
+        </div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>테이프</th>
+                <th class="right">가용재고(원단+실무)</th>
+                <th class="right">남은 필요수량</th>
+                <th>상태</th>
+                <th>부족 발생 예상</th>
+              </tr>
+            </thead>
+            <tbody id="forecastBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h2>가장 급한 발주</h2>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>납기</th>
+                <th>발주명</th>
+                <th class="right">목표</th>
+                <th class="right">완료</th>
+                <th>달성률</th>
+              </tr>
+            </thead>
+            <tbody id="urgentOrdersBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>오늘 작업일지 미리보기</h2>
+        <div class="muted" style="margin-bottom:8px">너가 쓰는 종이 양식 컬럼을 그대로 맞춤.</div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>제품명</th>
+                <th class="right">전재고</th>
+                <th>발행 LOT</th>
+                <th class="right">총수량</th>
+                <th>인쇄작업자</th>
+                <th class="right">소요량(양품)</th>
+                <th class="right">불량</th>
+                <th class="right">현재고</th>
+                <th>비고</th>
+              </tr>
+            </thead>
+            <tbody id="todayLogPreview"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATERIALS -->
+  <section id="tab-materials" class="tabPage hidden">
+    <div class="grid two">
+      <div class="card">
+        <h2>원단 재고 (Raw Material)</h2>
+        <div class="row">
+          <div class="field">
+            <label>테이프(자재) 코드</label>
+            <input id="rm_code" placeholder="예: 6855 / 6405 / 6406 ..." />
+          </div>
+          <div class="field">
+            <label>입고 LOT(선택)</label>
+            <input id="rm_lot" placeholder="LOT 번호" />
+          </div>
+          <div class="field">
+            <label>수량</label>
+            <input id="rm_qty" type="number" min="0" step="1" placeholder="예: 1000" />
+          </div>
+          <div class="btns">
+            <button class="primary" id="rm_add">입고/추가</button>
+            <button id="rm_sub">출고/차감</button>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="tableWrap">
+          <table>
+            <thead>
+              <tr><th>테이프</th><th class="right">현재 원단</th><th>메모</th><th class="right">삭제</th></tr>
+            </thead>
+            <tbody id="rm_table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>실무 테이프 재고 (Processed Stock)</h2>
+        <div class="muted" style="margin-bottom:10px">
+          가공실에서 컷팅되어 올라온 즉시 사용 가능한 수량. 작업 시 여기서 차감됨.
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>테이프 코드</label>
+            <input id="ps_code" placeholder="예: 6855" />
+          </div>
+          <div class="field">
+            <label>추가 입고분</label>
+            <input id="ps_in" type="number" min="0" step="1" placeholder="예: 200" />
+          </div>
+          <div class="btns">
+            <button class="primary" id="ps_add">실무 입고</button>
+            <button id="ps_sub">실무 차감</button>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="tableWrap">
+          <table>
+            <thead>
+              <tr><th>테이프</th><th class="right">현재 실무</th><th class="right">삭제</th></tr>
+            </thead>
+            <tbody id="ps_table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section id="tab-products" class="tabPage hidden">
+    <div class="grid two">
+      <div class="card">
+        <h2>작업 전 제품 재고 (WIP Inventory)</h2>
+        <div class="muted" style="margin-bottom:10px">
+          “인쇄는 완료, 테이프는 아직” 대기 제품 수량 관리.
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>제품명</label>
+            <input id="wip_name" placeholder="예: 6084 / 6934 / 김치(좌) ..." />
+          </div>
+          <div class="field">
+            <label>수량(EA)</label>
+            <input id="wip_qty" type="number" min="0" step="1" />
+          </div>
+          <div class="field">
+            <label>인쇄 작업자(선택)</label>
+            <select id="wip_printer"></select>
+          </div>
+          <div class="btns">
+            <button class="primary" id="wip_add">등록/추가</button>
+            <button id="wip_sub">차감</button>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>제품명</th>
+                <th class="right">WIP</th>
+                <th>인쇄작업자</th>
+                <th class="right">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="wip_table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>포장실 양품 재고</h2>
+        <div class="muted" style="margin-bottom:10px">
+          발주 작업량 계산: <b>발주수량 - 포장실 재고 = 실제 작업량</b>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>제품명</label>
+            <input id="pack_name" placeholder="예: 6084" />
+          </div>
+          <div class="field">
+            <label>수량(EA)</label>
+            <input id="pack_qty" type="number" min="0" step="1" />
+          </div>
+          <div class="btns">
+            <button class="primary" id="pack_add">등록/추가</button>
+            <button id="pack_sub">차감</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="tableWrap">
+          <table>
+            <thead>
+              <tr><th>제품명</th><th class="right">포장실</th><th class="right">삭제</th></tr>
+            </thead>
+            <tbody id="pack_table"></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px; border-top:1px dashed var(--line); padding-top:12px">
+          <h2 style="margin:0 0 8px">실작업량 계산기</h2>
+          <div class="row">
+            <div class="field">
+              <label>발주(납기) 선택</label>
+              <select id="calc_order"></select>
+            </div>
+            <div class="field">
+              <label>제품 선택</label>
+              <select id="calc_product"></select>
+            </div>
+            <div class="btns">
+              <button class="primary" id="btnCalc">계산</button>
+            </div>
+          </div>
+          <div id="calcResult" class="muted" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ORDERS -->
+  <section id="tab-orders" class="tabPage hidden">
+    <div class="grid two">
+      <div class="card">
+        <h2>발주 등록 (Order Master)</h2>
+        <div class="row">
+          <div class="field">
+            <label>발주명</label>
+            <input id="ord_title" placeholder="예: 1/24 납기 2,000개" />
+          </div>
+          <div class="field">
+            <label>납기일</label>
+            <input id="ord_due" type="date" />
+          </div>
+          <div class="field">
+            <label>메모(선택)</label>
+            <input id="ord_memo" placeholder="거래처/특이사항" />
+          </div>
+          <div class="btns">
+            <button class="primary" id="ord_add">발주 생성</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>납기</th>
+                <th>발주명</th>
+                <th class="right">목표합</th>
+                <th class="right">완료</th>
+                <th>달성률</th>
+                <th class="right">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="ord_table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>세트/LOT 계획 (Execution Plan)</h2>
+        <div class="muted" style="margin-bottom:10px">
+          발주 하나를 여러 날짜에 나눠 작업 가능. LOT별 제품/수량 등록 → 테이프 종류/배열수 자동 로딩.
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>발주 선택</label>
+            <select id="set_order"></select>
+          </div>
+          <div class="field">
+            <label>발행 LOT</label>
+            <input id="set_lot" placeholder="예: A-0120-1" />
+          </div>
+          <div class="field">
+            <label>작업 예정일</label>
+            <input id="set_planDate" type="date" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="field">
+            <label>제품 선택</label>
+            <select id="set_product"></select>
+          </div>
+          <div class="field">
+            <label>수량(EA)</label>
+            <input id="set_qty" type="number" min="0" step="1" />
+          </div>
+          <div class="field">
+            <label>자동 매칭(테이프/배열수)</label>
+            <input id="set_auto" disabled />
+          </div>
+          <div class="btns">
+            <button class="primary" id="set_add">세트 추가</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>발주</th>
+                <th>LOT</th>
+                <th>예정일</th>
+                <th>제품</th>
+                <th class="right">계획수량</th>
+                <th>테이프</th>
+                <th class="right">배열수</th>
+                <th class="right">완료(EA)</th>
+                <th class="right">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="set_table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXEC -->
+  <section id="tab-exec" class="tabPage hidden">
+    <div class="grid two">
+      <div class="card">
+        <h2>작업 실행 (Execution)</h2>
+        <div class="muted" style="margin-bottom:10px">
+          입력 → “오늘 꺼내야 할 테이프 장수” 자동 계산 → 완료 시 재고/달성률/일지 자동 반영.
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>발주 선택</label>
+            <select id="ex_order"></select>
+          </div>
+          <div class="field">
+            <label>세트(LOT) 선택</label>
+            <select id="ex_set"></select>
+          </div>
+          <div class="field">
+            <label>제품(자동)</label>
+            <input id="ex_product" disabled />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="field">
+            <label>인쇄작업자</label>
+            <select id="ex_printer"></select>
+          </div>
+          <div class="field">
+            <label>양품(EA)</label>
+            <input id="ex_good" type="number" min="0" step="1" />
+          </div>
+          <div class="field">
+            <label>불량(EA)</label>
+            <input id="ex_bad" type="number" min="0" step="1" value="0" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="field">
+            <label>여유분(%) (검사불량 대비)</label>
+            <input id="ex_buffer" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label>비고</label>
+            <input id="ex_note" placeholder="예: 테이프 부족/재작업 등" />
+          </div>
+          <div class="btns">
+            <button class="primary" id="ex_calc">테이프 장수 계산</button>
+            <button class="primary" id="ex_done">작업 완료(차감/일지기록)</button>
+          </div>
+        </div>
+
+        <div id="ex_result" class="card" style="margin-top:12px; background:#fff; border-style:dashed"></div>
+      </div>
+
+      <div class="card">
+        <h2>오늘 작업일지 (자동 기입)</h2>
+        <div class="muted" style="margin-bottom:8px">
+          컬럼: 날짜, 제품명, 전재고, 발행 LOT, 총수량, 인쇄작업자, 소요량(양품), 불량, 현재고, 비고
+        </div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>제품명</th>
+                <th class="right">전재고</th>
+                <th>발행 LOT</th>
+                <th class="right">총수량</th>
+                <th>인쇄작업자</th>
+                <th class="right">소요량(양품)</th>
+                <th class="right">불량</th>
+                <th class="right">현재고</th>
+                <th>비고</th>
+              </tr>
+            </thead>
+            <tbody id="ex_todayBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGS -->
+  <section id="tab-logs" class="tabPage hidden">
+    <div class="card">
+      <div class="split">
+        <div>
+          <h2>작업일지(전체)</h2>
+          <div class="muted">필터/검색은 여기서 확장하면 됨 (현재는 날짜 기준 정렬).</div>
+        </div>
+        <div class="row noPrint" style="justify-content:flex-end">
+          <div class="field" style="max-width:220px">
+            <label>날짜</label>
+            <input id="log_filterDate" type="date" />
+          </div>
+          <div class="btns">
+            <button id="log_clearFilter">필터 해제</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px" class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>제품명</th>
+              <th class="right">전재고</th>
+              <th>LOT</th>
+              <th class="right">총수량</th>
+              <th>인쇄작업자</th>
+              <th class="right">양품</th>
+              <th class="right">불량</th>
+              <th class="right">현재고</th>
+              <th>테이프</th>
+              <th class="right">테이프장수</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody id="logs_table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings" class="tabPage hidden">
+    <div class="grid two">
+      <div class="card">
+        <h2>제품 ↔ 테이프 종류/배열수 매핑</h2>
+        <div class="muted" style="margin-bottom:10px">
+          제품 선택 시 “전용 테이프”와 “배열수(장당 개수)” 자동 로딩. (여기서 관리)
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>제품명</label>
+            <input id="map_product" placeholder="예: 6084 / 김치(좌)" />
+          </div>
+          <div class="field">
+            <label>테이프 코드</label>
+            <input id="map_tape" placeholder="예: 6855 / 6405" />
+          </div>
+          <div class="field">
+            <label>배열수(장당 개수)</label>
+            <input id="map_array" type="number" min="1" step="1" placeholder="예: 2 / 4 / 6" />
+          </div>
+          <div class="btns">
+            <button class="primary" id="map_save">저장</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="tableWrap">
+          <table>
+            <thead>
+              <tr><th>제품</th><th>테이프</th><th class="right">배열수</th><th class="right">삭제</th></tr>
+            </thead>
+            <tbody id="map_table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>인쇄작업자 목록</h2>
+        <div class="muted" style="margin-bottom:10px">
+          “선택” 방식으로 쓰는 이름 리스트. (추가/삭제 가능)
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>이름</label>
+            <input id="p_name" placeholder="예: 홍길동" />
+          </div>
+          <div class="btns">
+            <button class="primary" id="p_add">추가</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="tableWrap">
+          <table>
+            <thead>
+              <tr><th>이름</th><th class="right">삭제</th></tr>
+            </thead>
+            <tbody id="p_table"></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px; border-top:1px dashed var(--line); padding-top:12px">
+          <h2 style="margin:0 0 8px">테이프 타입(특성) 메모</h2>
+          <div class="muted">예: 6855-필름 / 6405-종이 등 “공정 특성 고정” 관리용 메모</div>
+          <div class="row" style="margin-top:10px">
+            <div class="field">
+              <label>테이프 코드</label>
+              <input id="t_code" placeholder="예: 6855" />
+            </div>
+            <div class="field">
+              <label>타입/설명</label>
+              <input id="t_type" placeholder="예: 필름 / 종이 / 이면지 고정 등" />
+            </div>
+            <div class="btns">
+              <button class="primary" id="t_save">저장</button>
+            </div>
+          </div>
+          <div style="margin-top:10px" class="tableWrap">
+            <table>
+              <thead>
+                <tr><th>테이프</th><th>타입/설명</th><th class="right">삭제</th></tr>
+              </thead>
+              <tbody id="t_table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* =========================================================
+  TAPE KEEPER (LocalStorage skeleton)
+  - 데이터 모델
+    materialsRaw: { tapeCode: qty }
+    materialsProcessed: { tapeCode: qty }
+    wip: { productName: {qty, printer} }
+    pack: { productName: qty }
+    orders: [{id,title,dueDate,memo, items:{product:qty}, done:{product:qty}}]
+    sets: [{id, orderId, lot, planDate, product, qtyPlan, qtyDone, tapeCode, arrayCount}]
+    map: { productName: {tapeCode, arrayCount} }
+    tapeMeta: { tapeCode: {type} }
+    printers: [name...]
+    logs: [{id, dateISO, product, prevStock, lot, totalQty, printer, good, bad, currStock,
+            tapeCode, tapeSheets, note, orderId, setId }]
+========================================================= */
+
+const Store = {
+  key: "TAPE_KEEPER_V1",
+  load(){
+    try{
+      const raw = localStorage.getItem(this.key);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){ console.error(e); return null; }
+  },
+  save(state){
+    localStorage.setItem(this.key, JSON.stringify(state));
+  },
+  reset(){
+    localStorage.removeItem(this.key);
+  }
+};
+
+const todayISO = () => {
+  const d = new Date();
+  const kst = new Date(d.getTime() + (9*60*60*1000)); // UI가 한국이면 인쇄용으로 KST 고정
+  return kst.toISOString().slice(0,10);
+};
+
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+
+let state = Store.load() || seedState();
+Store.save(state);
+
+/* ---------- Seed (예시) ---------- */
+function seedState(){
+  return {
+    materialsRaw: { "6855": 1591, "6405": 1026, "6406": 22 },
+    materialsProcessed: { "6855": 200, "6405": 80 },
+    wip: {
+      "6084": {qty:10, printer:""},
+      "6934": {qty:0, printer:""},
+      "5869": {qty:22, printer:""},
+      "4355": {qty:32, printer:""},
+      "4195": {qty:269, printer:""},
+      "7011": {qty:72, printer:""},
+      "6855": {qty:1517, printer:""},
+      "4221": {qty:350, printer:""},
+      "3538A 큐밍": {qty:169, printer:""},
+      "SPIN": {qty:179, printer:""},
+      "공청기": {qty:2648, printer:""},
+      "고데기": {qty:355, printer:""},
+      "파종기": {qty:23, printer:""},
+      "김치(좌)": {qty:26, printer:""},
+      "김치(우)": {qty:5, printer:""},
+      "기본(좌)": {qty:55, printer:""},
+      "기본(우)": {qty:20, printer:""},
+      "6491": {qty:776, printer:""},
+      "6405제품": {qty:1026, printer:""},
+      "6406제품": {qty:22, printer:""}
+    },
+    pack: {},
+    printers: ["봉련", "영숙", "다예", "기타"],
+    tapeMeta: { "6855":{type:"필름"}, "6405":{type:"종이"}, "6406":{type:"종이"} },
+    map: {
+      "6084": {tapeCode:"6855", arrayCount:4},
+      "6934": {tapeCode:"6855", arrayCount:4},
+      "5869": {tapeCode:"6855", arrayCount:4},
+      "김치(좌)": {tapeCode:"6405", arrayCount:2},
+      "김치(우)": {tapeCode:"6405", arrayCount:2}
+    },
+    orders: [],
+    sets: [],
+    logs: []
+  };
+}
+
+/* ---------- UI Helpers ---------- */
+const $ = (id)=>document.getElementById(id);
+const fmtPct = (x)=> (Math.round(x*10)/10).toFixed(1) + "%";
+const n = (v)=> Number(v||0);
+
+function setTabs(){
+  const tabs = $("tabs");
+  tabs.addEventListener("click",(e)=>{
+    const t = e.target.closest(".tab");
+    if(!t) return;
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    const name = t.dataset.tab;
+    document.querySelectorAll(".tabPage").forEach(p=>p.classList.add("hidden"));
+    $("tab-"+name).classList.remove("hidden");
+    renderAll();
+  });
+}
+
+/* ---------- Core Logic ---------- */
+function getAllProducts(){
+  const s = new Set();
+  Object.keys(state.wip).forEach(k=>s.add(k));
+  Object.keys(state.pack).forEach(k=>s.add(k));
+  // orders/items 기반도 포함
+  state.orders.forEach(o=>{
+    Object.keys(o.items||{}).forEach(k=>s.add(k));
+  });
+  // map 기반도 포함
+  Object.keys(state.map).forEach(k=>s.add(k));
+  return [...s].sort((a,b)=>a.localeCompare(b,"ko"));
+}
+
+function ensureOrderItems(orderId){
+  const o = state.orders.find(x=>x.id===orderId);
+  if(!o.items) o.items = {};
+  if(!o.done) o.done = {};
+  return o;
+}
+
+function orderTotals(order){
+  const items = order.items||{};
+  const done = order.done||{};
+  let goal = 0, fin = 0;
+  for(const p of Object.keys(items)){
+    goal += n(items[p]);
+    fin += Math.min(n(done[p]), n(items[p]));
+  }
+  const rate = goal ? (fin/goal)*100 : 0;
+  return {goal, fin, rate};
+}
+
+// 세트 계획 → “남은 필요 테이프 장수” 추정(계획 기반)
+function plannedTapeNeedByTape(){
+  const need = {}; // tapeCode -> sheets
+  for(const s of state.sets){
+    const leftEA = Math.max(0, n(s.qtyPlan) - n(s.qtyDone));
+    if(leftEA<=0) continue;
+    const arrayCount = Math.max(1, n(s.arrayCount));
+    const sheets = Math.ceil(leftEA / arrayCount);
+    need[s.tapeCode] = (need[s.tapeCode]||0) + sheets;
+  }
+  return need;
+}
+
+function availableTapeByTape(){
+  const out = {};
+  const codes = new Set([...Object.keys(state.materialsRaw), ...Object.keys(state.materialsProcessed)]);
+  codes.forEach(c=>{
+    out[c] = n(state.materialsRaw[c]) + n(state.materialsProcessed[c]);
+  });
+  return out;
+}
+
+// “부족 발생 예상” = 납기 빠른 순으로 누적 필요량을 뽑아, 재고 초과되는 첫 dueDate
+function shortageDateEstimate(tapeCode){
+  const av = n(state.materialsRaw[tapeCode]) + n(state.materialsProcessed[tapeCode]);
+  // orders dueDate 오름차순
+  const ordersSorted = [...state.orders].sort((a,b)=>(a.dueDate||"9999-12-31").localeCompare(b.dueDate||"9999-12-31"));
+  let cum = 0;
+  for(const o of ordersSorted){
+    // 이 발주에 연결된 세트들 중 남은 EA 합 → 장수로 변환(제품별 배열수 다르니까 세트 단위로 계산)
+    const sets = state.sets.filter(s=>s.orderId===o.id);
+    let add = 0;
+    for(const s of sets){
+      if(s.tapeCode!==tapeCode) continue;
+      const leftEA = Math.max(0, n(s.qtyPlan) - n(s.qtyDone));
+      if(leftEA<=0) continue;
+      add += Math.ceil(leftEA / Math.max(1,n(s.arrayCount)));
+    }
+    cum += add;
+    if(cum > av){
+      return o.dueDate || "(납기 미지정)";
+    }
+  }
+  return "-";
+}
+
+function computeTapeSheetsForExecution(setObj, goodEA, badEA, bufferPct){
+  const arr = Math.max(1, n(setObj.arrayCount));
+  const baseEA = n(goodEA) + n(badEA);
+  const withBuf = Math.ceil(baseEA * (1 + n(bufferPct)/100));
+  const sheets = Math.ceil(withBuf / arr);
+  return {arr, baseEA, withBuf, sheets};
+}
+
+/* ---------- Render ---------- */
+function renderAll(){
+  renderSelectors();
+  renderKpis();
+  renderForecast();
+  renderUrgentOrders();
+  renderTodayPreview();
+  renderMaterials();
+  renderProducts();
+  renderOrders();
+  renderSets();
+  renderExecToday();
+  renderLogs();
+  renderMappings();
+  renderPrinters();
+  renderTapeMeta();
+}
+
+function renderSelectors(){
+  // printers
+  const fillPrinter = (selId)=>{
+    const el = $(selId);
+    if(!el) return;
+    el.innerHTML = `<option value="">(선택)</option>` + state.printers.map(p=>`<option>${escapeHtml(p)}</option>`).join("");
+  };
+  fillPrinter("wip_printer");
+  fillPrinter("ex_printer");
+
+  // order selects
+  const orderOpts = `<option value="">(선택)</option>` + state.orders
+    .slice()
+    .sort((a,b)=>(a.dueDate||"9999-12-31").localeCompare(b.dueDate||"9999-12-31"))
+    .map(o=>`<option value="${o.id}">${escapeHtml(o.dueDate||"무기한")} · ${escapeHtml(o.title)}</option>`)
+    .join("");
+
+  ["set_order","ex_order","calc_order"].forEach(id=>{
+    const el = $(id); if(el) el.innerHTML = orderOpts;
+  });
+
+  // product selects
+  const products = getAllProducts();
+  const prodOpts = `<option value="">(선택)</option>` + products.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+  ["set_product","calc_product"].forEach(id=>{
+    const el = $(id); if(el) el.innerHTML = prodOpts;
+  });
+
+  // exec set list depends on order
+  const exOrderId = $("ex_order")?.value || "";
+  const exSetEl = $("ex_set");
+  if(exSetEl){
+    const sets = state.sets
+      .filter(s=> !exOrderId || s.orderId===exOrderId )
+      .slice()
+      .sort((a,b)=>(a.planDate||"9999-12-31").localeCompare(b.planDate||"9999-12-31"));
+    exSetEl.innerHTML = `<option value="">(선택)</option>` + sets.map(s=>{
+      const left = Math.max(0, n(s.qtyPlan)-n(s.qtyDone));
+      return `<option value="${s.id}">${escapeHtml(s.planDate||"미정")} · LOT ${escapeHtml(s.lot||"-")} · ${escapeHtml(s.product)} · 남음 ${left}</option>`;
+    }).join("");
+  }
+
+  // auto mapping hint for set planning
+  const prod = $("set_product")?.value;
+  if(prod){
+    const m = state.map[prod];
+    $("set_auto").value = m ? `${m.tapeCode} / 배열수 ${m.arrayCount}` : "(매핑 없음)";
+  }else if($("set_auto")){
+    $("set_auto").value = "";
+  }
+}
+
+function renderKpis(){
+  const logsToday = state.logs.filter(l=>l.dateISO===todayISO());
+  const doneToday = logsToday.reduce((a,x)=>a+n(x.good),0);
+  const badToday = logsToday.reduce((a,x)=>a+n(x.bad),0);
+
+  const totalWip = Object.values(state.wip).reduce((a,x)=>a+n(x.qty),0);
+  const totalPack = Object.values(state.pack).reduce((a,x)=>a+n(x),0);
+
+  const need = plannedTapeNeedByTape();
+  const av = availableTapeByTape();
+  const tapes = new Set([...Object.keys(need), ...Object.keys(av)]);
+
+  let shortageCnt = 0;
+  tapes.forEach(t=>{
+    if(n(need[t]) > n(av[t])) shortageCnt++;
+  });
+
+  const kpis = [
+    {t:"오늘 양품 작업량(EA)", v: doneToday.toLocaleString("ko-KR")},
+    {t:"오늘 불량(EA)", v: badToday.toLocaleString("ko-KR")},
+    {t:"WIP 총량(EA)", v: totalWip.toLocaleString("ko-KR")},
+    {t:"포장실 재고(EA)", v: totalPack.toLocaleString("ko-KR")},
+    {t:"테이프 부족 품목", v: shortageCnt + "건"}
+  ];
+
+  $("kpis").innerHTML = kpis.map(x=>`
+    <div class="k">
+      <div class="t">${escapeHtml(x.t)}</div>
+      <div class="v">${escapeHtml(String(x.v))}</div>
+    </div>
+  `).join("");
+}
+
+function renderForecast(){
+  const need = plannedTapeNeedByTape();
+  const av = availableTapeByTape();
+  const codes = [...new Set([...Object.keys(need), ...Object.keys(av), ...Object.keys(state.tapeMeta)])]
+    .sort((a,b)=>a.localeCompare(b,"ko"));
+
+  const rows = codes.map(code=>{
+    const a = n(av[code]);
+    const r = n(need[code]);
+    const type = state.tapeMeta[code]?.type ? ` · ${state.tapeMeta[code].type}` : "";
+    let badge = `<span class="badge b-ok">여유</span>`;
+    if(r > a) badge = `<span class="badge b-bad">부족</span>`;
+    else if(r > a*0.8 && r>0) badge = `<span class="badge b-warn">임박</span>`;
+    const est = (r>a) ? shortageDateEstimate(code) : "-";
+    return `
+      <tr>
+        <td><b>${escapeHtml(code)}</b><span class="muted">${escapeHtml(type)}</span></td>
+        <td class="right mono">${a.toLocaleString("ko-KR")}</td>
+        <td class="right mono">${r.toLocaleString("ko-KR")}</td>
+        <td>${badge}</td>
+        <td>${escapeHtml(est)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  $("forecastBody").innerHTML = rows || `<tr><td colspan="5" class="muted">세트(LOT) 계획이 없어서 예측할 데이터가 없어.</td></tr>`;
+}
+
+function renderUrgentOrders(){
+  const orders = state.orders.slice().sort((a,b)=>(a.dueDate||"9999-12-31").localeCompare(b.dueDate||"9999-12-31"));
+  const rows = orders.slice(0,10).map(o=>{
+    const {goal, fin, rate} = orderTotals(o);
+    const badge = rate>=100 ? `<span class="badge b-ok">완료</span>` : (rate>=70 ? `<span class="badge b-warn">진행</span>` : `<span class="badge b-bad">미달</span>`);
+    return `
+      <tr>
+        <td class="mono">${escapeHtml(o.dueDate||"-")}</td>
+        <td>${escapeHtml(o.title)}</td>
+        <td class="right mono">${goal.toLocaleString("ko-KR")}</td>
+        <td class="right mono">${fin.toLocaleString("ko-KR")}</td>
+        <td>${badge} <span class="muted">${fmtPct(rate)}</span></td>
+      </tr>
+    `;
+  }).join("");
+  $("urgentOrdersBody").innerHTML = rows || `<tr><td colspan="5" class="muted">등록된 발주가 없어.</td></tr>`;
+}
+
+function renderTodayPreview(){
+  const logsToday = state.logs.filter(l=>l.dateISO===todayISO());
+  const rows = logsToday.slice().reverse().map(l=>`
+    <tr>
+      <td><b>${escapeHtml(l.product)}</b></td>
+      <td class="right mono">${n(l.prevStock).toLocaleString("ko-KR")}</td>
+      <td class="mono">${escapeHtml(l.lot||"-")}</td>
+      <td class="right mono">${n(l.totalQty).toLocaleString("ko-KR")}</td>
+      <td>${escapeHtml(l.printer||"")}</td>
+      <td class="right mono">${n(l.good).toLocaleString("ko-KR")}</td>
+      <td class="right mono">${n(l.bad).toLocaleString("ko-KR")}</td>
+      <td class="right mono">${n(l.currStock).toLocaleString("ko-KR")}</td>
+      <td class="muted">${escapeHtml(l.note||"")}</td>
+    </tr>
+  `).join("");
+  $("todayLogPreview").innerHTML = rows || `<tr><td colspan="9" class="muted">오늘 기록이 아직 없어.</td></tr>`;
+}
+
+function renderMaterials(){
+  const rmBody = Object.keys(state.materialsRaw).sort((a,b)=>a.localeCompare(b,"ko")).map(code=>`
+    <tr>
+      <td><b>${escapeHtml(code)}</b></td>
+      <td class="right mono">${n(state.materialsRaw[code]).toLocaleString("ko-KR")}</td>
+      <td class="muted">${escapeHtml(state.tapeMeta[code]?.type || "")}</td>
+      <td class="right"><button class="danger" data-delrm="${escapeHtml(code)}">삭제</button></td>
+    </tr>
+  `).join("");
+  $("rm_table").innerHTML = rmBody || `<tr><td colspan="4" class="muted">원단 재고가 비어있어.</td></tr>`;
+
+  const psBody = Object.keys(state.materialsProcessed).sort((a,b)=>a.localeCompare(b,"ko")).map(code=>`
+    <tr>
+      <td><b>${escapeHtml(code)}</b></td>
+      <td class="right mono">${n(state.materialsProcessed[code]).toLocaleString("ko-KR")}</td>
+      <td class="right"><button class="danger" data-delps="${escapeHtml(code)}">삭제</button></td>
+    </tr>
+  `).join("");
+  $("ps_table").innerHTML = psBody || `<tr><td colspan="3" class="muted">실무 재고가 비어있어.</td></tr>`;
+}
+
+function renderProducts(){
+  const wipRows = Object.keys(state.wip).sort((a,b)=>a.localeCompare(b,"ko")).map(p=>{
+    const w = state.wip[p];
+    return `
+      <tr>
+        <td><b>${escapeHtml(p)}</b></td>
+        <td class="right mono">${n(w.qty).toLocaleString("ko-KR")}</td>
+        <td>${escapeHtml(w.printer||"")}</td>
+        <td class="right"><button class="danger" data-delwip="${escapeHtml(p)}">삭제</button></td>
+      </tr>
+    `;
+  }).join("");
+  $("wip_table").innerHTML = wipRows || `<tr><td colspan="4" class="muted">WIP가 비어있어.</td></tr>`;
+
+  const packRows = Object.keys(state.pack).sort((a,b)=>a.localeCompare(b,"ko")).map(p=>`
+    <tr>
+      <td><b>${escapeHtml(p)}</b></td>
+      <td class="right mono">${n(state.pack[p]).toLocaleString("ko-KR")}</td>
+      <td class="right"><button class="danger" data-delpack="${escapeHtml(p)}">삭제</button></td>
+    </tr>
+  `).join("");
+  $("pack_table").innerHTML = packRows || `<tr><td colspan="3" class="muted">포장실 재고가 비어있어.</td></tr>`;
+}
+
+function renderOrders(){
+  const rows = state.orders.slice().sort((a,b)=>(a.dueDate||"9999-12-31").localeCompare(b.dueDate||"9999-12-31")).map(o=>{
+    const {goal, fin, rate} = orderTotals(o);
+    const badge = rate>=100 ? `<span class="badge b-ok">완료</span>` : (rate>=70 ? `<span class="badge b-warn">진행</span>` : `<span class="badge b-bad">미달</span>`);
+    return `
+      <tr>
+        <td class="mono">${escapeHtml(o.dueDate||"-")}</td>
+        <td>
+          <b>${escapeHtml(o.title)}</b>
+          <div class="muted">${escapeHtml(o.memo||"")}</div>
+          <div class="muted">품목: ${escapeHtml(Object.keys(o.items||{}).join(", ")||"-")}</div>
+        </td>
+        <td class="right mono">${goal.toLocaleString("ko-KR")}</td>
+        <td class="right mono">${fin.toLocaleString("ko-KR")}</td>
+        <td>${badge} <span class="muted">${fmtPct(rate)}</span></td>
+        <td class="right"><button class="danger" data-delord="${o.id}">삭제</button></td>
+      </tr>
+    `;
+  }).join("");
+  $("ord_table").innerHTML = rows || `<tr><td colspan="6" class="muted">발주가 아직 없어.</td></tr>`;
+}
+
+function renderSets(){
+  const rows = state.sets.slice().sort((a,b)=>(a.planDate||"9999-12-31").localeCompare(b.planDate||"9999-12-31")).map(s=>{
+    const o = state.orders.find(x=>x.id===s.orderId);
+    return `
+      <tr>
+        <td class="muted">${escapeHtml(o ? (o.dueDate||"-")+" · "+o.title : "(발주삭제됨)")}</td>
+        <td class="mono">${escapeHtml(s.lot||"-")}</td>
+        <td class="mono">${escapeHtml(s.planDate||"-")}</td>
+        <td><b>${escapeHtml(s.product)}</b></td>
+        <td class="right mono">${n(s.qtyPlan).toLocaleString("ko-KR")}</td>
+        <td><b>${escapeHtml(s.tapeCode||"-")}</b></td>
+        <td class="right mono">${n(s.arrayCount).toLocaleString("ko-KR")}</td>
+        <td class="right mono">${n(s.qtyDone).toLocaleString("ko-KR")}</td>
+        <td class="right"><button class="danger" data-delset="${s.id}">삭제</button></td>
+      </tr>
+    `;
+  }).join("");
+  $("set_table").innerHTML = rows || `<tr><td colspan="9" class="muted">세트(LOT) 계획이 없어.</td></tr>`;
+}
+
+function renderExecToday(){
+  const logsToday = state.logs.filter(l=>l.dateISO===todayISO()).slice().reverse();
+  $("ex_todayBody").innerHTML = logsToday.map(l=>`
+    <tr>
+      <td><b>${escapeHtml(l.product)}</b></td>
+      <td class="right mono">${n(l.prevStock).toLocaleString("ko-KR")}</td>
+      <td class="mono">${escapeHtml(l.lot||"-")}</td>
+      <td class="right mono">${n(l.totalQty).toLocaleString("ko-KR")}</td>
+      <td>${escapeHtml(l.printer||"")}</td>
+      <td class="right mono">${n(l.good).toLocaleString("ko-KR")}</td>
+      <td class="right mono">${n(l.bad).toLocaleString("ko-KR")}</td>
+      <td class="right mono">${n(l.currStock).toLocaleString("ko-KR")}</td>
+      <td class="muted">${escapeHtml(l.note||"")}</td>
+    </tr>
+  `).join("") || `<tr><td colspan="9" class="muted">오늘 기록이 없어.</td></tr>`;
+
+  // exec panel set -> product fill
+  const setId = $("ex_set")?.value;
+  if(setId){
+    const s = state.sets.find(x=>x.id===setId);
+    $("ex_product").value = s ? s.product : "";
+  }else if($("ex_product")){
+    $("ex_product").value = "";
+  }
+}
+
+function renderLogs(){
+  const f = $("log_filterDate")?.value || "";
+  let logs = state.logs.slice().sort((a,b)=>(b.dateISO||"").localeCompare(a.dateISO||""));
+  if(f) logs = logs.filter(x=>x.dateISO===f);
+
+  $("logs_table").innerHTML = logs.map(l=>`
+    <tr>
+      <td class="mono">${escapeHtml(l.dateISO)}</td>
+      <td><b>${escapeHtml(l.product)}</b></td>
+      <td class="right mono">${n(l.prevStock).toLocaleString("ko-KR")}</td>
+      <td class="mono">${escapeHtml(l.lot||"-")}</td>
+      <td class="right mono">${n(l.totalQty).toLocaleString("ko-KR")}</td>
+      <td>${escapeHtml(l.printer||"")}</td>
+      <td class="right mono">${n(l.good).toLocaleString("ko-KR")}</td>
+      <td class="right mono">${n(l.bad).toLocaleString("ko-KR")}</td>
+      <td class="right mono">${n(l.currStock).toLocaleString("ko-KR")}</td>
+      <td><b>${escapeHtml(l.tapeCode||"-")}</b></td>
+      <td class="right mono">${n(l.tapeSheets).toLocaleString("ko-KR")}</td>
+      <td class="muted">${escapeHtml(l.note||"")}</td>
+    </tr>
+  `).join("") || `<tr><td colspan="12" class="muted">로그가 없어.</td></tr>`;
+}
+
+function renderMappings(){
+  const rows = Object.keys(state.map).sort((a,b)=>a.localeCompare(b,"ko")).map(p=>{
+    const m = state.map[p];
+    return `
+      <tr>
+        <td><b>${escapeHtml(p)}</b></td>
+        <td><b>${escapeHtml(m.tapeCode)}</b></td>
+        <td class="right mono">${n(m.arrayCount).toLocaleString("ko-KR")}</td>
+        <td class="right"><button class="danger" data-delmap="${escapeHtml(p)}">삭제</button></td>
+      </tr>
+    `;
+  }).join("");
+  $("map_table").innerHTML = rows || `<tr><td colspan="4" class="muted">매핑이 없어. 제품별 테이프/배열수를 먼저 등록해.</td></tr>`;
+}
+
+function renderPrinters(){
+  $("p_table").innerHTML = state.printers.map(name=>`
+    <tr>
+      <td><b>${escapeHtml(name)}</b></td>
+      <td class="right"><button class="danger" data-delprinter="${escapeHtml(name)}">삭제</button></td>
+    </tr>
+  `).join("") || `<tr><td colspan="2" class="muted">작업자 목록이 비어있어.</td></tr>`;
+}
+
+function renderTapeMeta(){
+  const rows = Object.keys(state.tapeMeta).sort((a,b)=>a.localeCompare(b,"ko")).map(code=>`
+    <tr>
+      <td><b>${escapeHtml(code)}</b></td>
+      <td>${escapeHtml(state.tapeMeta[code]?.type || "")}</td>
+      <td class="right"><button class="danger" data-deltmeta="${escapeHtml(code)}">삭제</button></td>
+    </tr>
+  `).join("");
+  $("t_table").innerHTML = rows || `<tr><td colspan="3" class="muted">테이프 타입 메모가 없어.</td></tr>`;
+}
+
+/* ---------- Events ---------- */
+function bindEvents(){
+  // global actions
+  $("btnPrint").onclick = ()=> window.print();
+  $("btnReset").onclick = ()=>{
+    if(confirm("진짜 초기화할거야? (데이터 전부 삭제됨)")){
+      Store.reset();
+      state = seedState();
+      Store.save(state);
+      renderAll();
+    }
+  };
+  $("btnExport").onclick = exportCSV;
+
+  // materials raw
+  $("rm_add").onclick = ()=>{
+    const code = $("rm_code").value.trim();
+    const qty = n($("rm_qty").value);
+    if(!code || qty<=0) return alert("테이프 코드랑 수량을 제대로 넣어줘.");
+    state.materialsRaw[code] = n(state.materialsRaw[code]) + qty;
+    Store.save(state);
+    renderAll();
+  };
+  $("rm_sub").onclick = ()=>{
+    const code = $("rm_code").value.trim();
+    const qty = n($("rm_qty").value);
+    if(!code || qty<=0) return alert("테이프 코드랑 수량을 제대로 넣어줘.");
+    state.materialsRaw[code] = Math.max(0, n(state.materialsRaw[code]) - qty);
+    Store.save(state);
+    renderAll();
+  };
+
+  // processed stock
+  $("ps_add").onclick = ()=>{
+    const code = $("ps_code").value.trim();
+    const qty = n($("ps_in").value);
+    if(!code || qty<=0) return alert("테이프 코드랑 수량을 제대로 넣어줘.");
+    state.materialsProcessed[code] = n(state.materialsProcessed[code]) + qty;
+    Store.save(state);
+    renderAll();
+  };
+  $("ps_sub").onclick = ()=>{
+    const code = $("ps_code").value.trim();
+    const qty = n($("ps_in").value);
+    if(!code || qty<=0) return alert("테이프 코드랑 수량을 제대로 넣어줘.");
+    state.materialsProcessed[code] = Math.max(0, n(state.materialsProcessed[code]) - qty);
+    Store.save(state);
+    renderAll();
+  };
+
+  // WIP
+  $("wip_add").onclick = ()=>{
+    const name = $("wip_name").value.trim();
+    const qty = n($("wip_qty").value);
+    const printer = $("wip_printer").value || "";
+    if(!name || qty<=0) return alert("제품명/수량 넣어줘.");
+    const cur = state.wip[name]?.qty || 0;
+    state.wip[name] = { qty: cur + qty, printer: printer || (state.wip[name]?.printer||"") };
+    Store.save(state);
+    renderAll();
+  };
+  $("wip_sub").onclick = ()=>{
+    const name = $("wip_name").value.trim();
+    const qty = n($("wip_qty").value);
+    if(!name || qty<=0) return alert("제품명/수량 넣어줘.");
+    if(!state.wip[name]) state.wip[name] = {qty:0, printer:""};
+    state.wip[name].qty = Math.max(0, n(state.wip[name].qty) - qty);
+    Store.save(state);
+    renderAll();
+  };
+
+  // PACK
+  $("pack_add").onclick = ()=>{
+    const name = $("pack_name").value.trim();
+    const qty = n($("pack_qty").value);
+    if(!name || qty<=0) return alert("제품명/수량 넣어줘.");
+    state.pack[name] = n(state.pack[name]) + qty;
+    Store.save(state);
+    renderAll();
+  };
+  $("pack_sub").onclick = ()=>{
+    const name = $("pack_name").value.trim();
+    const qty = n($("pack_qty").value);
+    if(!name || qty<=0) return alert("제품명/수량 넣어줘.");
+    state.pack[name] = Math.max(0, n(state.pack[name]) - qty);
+    Store.save(state);
+    renderAll();
+  };
+
+  // Calc actual work qty: order - pack
+  $("btnCalc").onclick = ()=>{
+    const orderId = $("calc_order").value;
+    const prod = $("calc_product").value;
+    if(!orderId || !prod) return alert("발주랑 제품 선택해줘.");
+    const o = ensureOrderItems(orderId);
+    const target = n(o.items?.[prod]);
+    const pack = n(state.pack[prod]);
+    const need = Math.max(0, target - pack);
+    $("calcResult").innerHTML =
+      `발주 목표 <b class="mono">${target.toLocaleString("ko-KR")}</b> - 포장실 <b class="mono">${pack.toLocaleString("ko-KR")}</b> = ` +
+      `<b style="color:var(--pri)" class="mono">${need.toLocaleString("ko-KR")}</b> (실작업량)`;
+  };
+
+  // Order create
+  $("ord_add").onclick = ()=>{
+    const title = $("ord_title").value.trim();
+    const due = $("ord_due").value;
+    const memo = $("ord_memo").value.trim();
+    if(!title) return alert("발주명 써줘.");
+    const o = { id: uid(), title, dueDate: due || "", memo, items:{}, done:{} };
+    state.orders.push(o);
+    Store.save(state);
+    $("ord_title").value = ""; $("ord_memo").value = "";
+    renderAll();
+  };
+
+  // Set add
+  $("set_add").onclick = ()=>{
+    const orderId = $("set_order").value;
+    const lot = $("set_lot").value.trim();
+    const planDate = $("set_planDate").value;
+    const product = $("set_product").value;
+    const qtyPlan = n($("set_qty").value);
+    if(!orderId || !product || qtyPlan<=0) return alert("발주/제품/수량은 필수야.");
+    const m = state.map[product];
+    if(!m) return alert("이 제품은 매핑이 없어. [설정]에서 제품↔테이프/배열수 등록 먼저!");
+    const setObj = {
+      id: uid(),
+      orderId, lot, planDate,
+      product,
+      qtyPlan,
+      qtyDone: 0,
+      tapeCode: m.tapeCode,
+      arrayCount: n(m.arrayCount)
+    };
+    state.sets.push(setObj);
+
+    // order items에 목표 누적(발주 목표 수량)
+    const o = ensureOrderItems(orderId);
+    o.items[product] = n(o.items[product]) + qtyPlan;
+
+    Store.save(state);
+    $("set_lot").value = ""; $("set_qty").value = "";
+    renderAll();
+  };
+
+  // Exec calc
+  $("ex_calc").onclick = ()=>{
+    const setId = $("ex_set").value;
+    const good = n($("ex_good").value);
+    const bad = n($("ex_bad").value);
+    const buf = n($("ex_buffer").value);
+    if(!setId) return alert("세트(LOT) 선택해줘.");
+    const s = state.sets.find(x=>x.id===setId);
+    if(!s) return alert("세트를 찾을 수 없어.");
+    const {arr, baseEA, withBuf, sheets} = computeTapeSheetsForExecution(s, good, bad, buf);
+    const avProc = n(state.materialsProcessed[s.tapeCode]);
+    $("ex_result").innerHTML = `
+      <h2 style="margin:0 0 8px">계산 결과</h2>
+      <div class="muted">제품: <b>${escapeHtml(s.product)}</b> / 테이프: <b>${escapeHtml(s.tapeCode)}</b> / 배열수: <b class="mono">${arr}</b></div>
+      <div style="margin-top:10px" class="kpi">
+        <div class="k"><div class="t">입력 합계(EA)</div><div class="v mono">${baseEA.toLocaleString("ko-KR")}</div></div>
+        <div class="k"><div class="t">여유분 포함(EA)</div><div class="v mono">${withBuf.toLocaleString("ko-KR")}</div></div>
+        <div class="k"><div class="t">오늘 꺼낼 테이프 장수</div><div class="v mono">${sheets.toLocaleString("ko-KR")}</div></div>
+      </div>
+      <div style="margin-top:10px" class="muted">
+        현재 실무재고(테이프 ${escapeHtml(s.tapeCode)}): <b class="mono">${avProc.toLocaleString("ko-KR")}</b>
+      </div>
+    `;
+  };
+
+  // Exec done
+  $("ex_done").onclick = ()=>{
+    const orderId = $("ex_order").value;
+    const setId = $("ex_set").value;
+    const printer = $("ex_printer").value || "";
+    const good = n($("ex_good").value);
+    const bad = n($("ex_bad").value);
+    const buf = n($("ex_buffer").value);
+    const note = $("ex_note").value.trim();
+
+    if(!orderId || !setId) return alert("발주/세트 선택해줘.");
+    if(good<=0 && bad<=0) return alert("양품/불량 둘 중 하나라도 넣어줘.");
+    const s = state.sets.find(x=>x.id===setId);
+    if(!s) return alert("세트를 찾을 수 없어.");
+
+    const left = Math.max(0, n(s.qtyPlan) - n(s.qtyDone));
+    const totalEA = good + bad;
+    if(totalEA > left){
+      if(!confirm(`이 세트 남은 수량이 ${left}인데, 입력합 ${totalEA}가 더 커. 그래도 진행할거야?`)) return;
+    }
+
+    const calc = computeTapeSheetsForExecution(s, good, bad, buf);
+    const tapeCode = s.tapeCode;
+
+    // 재고 스냅샷 (종이 양식: 제품 전재고/현재고)
+    const prevStock = n(state.wip[s.product]?.qty);
+    // 1) 실무 테이프 차감 (장수)
+    state.materialsProcessed[tapeCode] = Math.max(0, n(state.materialsProcessed[tapeCode]) - calc.sheets);
+
+    // 2) WIP 차감 (양품+불량)
+    if(!state.wip[s.product]) state.wip[s.product] = {qty:0, printer:""};
+    state.wip[s.product].qty = Math.max(0, n(state.wip[s.product].qty) - totalEA);
+
+    // 3) 포장실 양품 증가
+    state.pack[s.product] = n(state.pack[s.product]) + good;
+
+    // 4) 세트 완료 수량 업데이트 (EA)
+    s.qtyDone = n(s.qtyDone) + totalEA;
+
+    // 5) 발주 완료율 업데이트 (제품 단위 done 누적 = 양품 기준으로 잡는 게 일반적)
+    const o = ensureOrderItems(orderId);
+    o.done[s.product] = n(o.done[s.product]) + good;
+
+    // 6) 작업일지 기록 (종이 컬럼 + 테이프장수 포함)
+    const currStock = n(state.wip[s.product]?.qty);
+    state.logs.push({
+      id: uid(),
+      dateISO: todayISO(),
+      product: s.product,
+      prevStock,
+      lot: s.lot,
+      totalQty: totalEA,
+      printer,
+      good,
+      bad,
+      currStock,
+      tapeCode,
+      tapeSheets: calc.sheets,
+      note,
+      orderId,
+      setId
+    });
+
+    Store.save(state);
+
+    // 입력 리셋(편하게)
+    $("ex_good").value = "";
+    $("ex_bad").value = "0";
+    $("ex_note").value = "";
+    $("ex_result").innerHTML = `<div class="muted">완료 처리됨. 재고/달성률/일지 업데이트 끝.</div>`;
+    renderAll();
+  };
+
+  // Settings mapping save
+  $("map_save").onclick = ()=>{
+    const p = $("map_product").value.trim();
+    const t = $("map_tape").value.trim();
+    const a = n($("map_array").value);
+    if(!p || !t || a<=0) return alert("제품/테이프/배열수 다 넣어줘.");
+    state.map[p] = {tapeCode:t, arrayCount:a};
+    Store.save(state);
+    $("map_product").value=""; $("map_tape").value=""; $("map_array").value="";
+    renderAll();
+  };
+
+  // Printers add
+  $("p_add").onclick = ()=>{
+    const name = $("p_name").value.trim();
+    if(!name) return;
+    if(state.printers.includes(name)) return alert("이미 있어.");
+    state.printers.push(name);
+    Store.save(state);
+    $("p_name").value="";
+    renderAll();
+  };
+
+  // Tape meta save
+  $("t_save").onclick = ()=>{
+    const code = $("t_code").value.trim();
+    const type = $("t_type").value.trim();
+    if(!code) return alert("코드 넣어줘.");
+    state.tapeMeta[code] = {type};
+    Store.save(state);
+    $("t_code").value=""; $("t_type").value="";
+    renderAll();
+  };
+
+  // filters
+  $("log_filterDate").onchange = ()=> renderLogs();
+  $("log_clearFilter").onclick = ()=>{
+    $("log_filterDate").value = "";
+    renderLogs();
+  };
+
+  // dynamic click deletes
+  document.body.addEventListener("click",(e)=>{
+    const b = e.target.closest("button");
+    if(!b) return;
+
+    if(b.dataset.delrm){
+      delete state.materialsRaw[b.dataset.delrm];
+      Store.save(state); renderAll();
+    }
+    if(b.dataset.delps){
+      delete state.materialsProcessed[b.dataset.delps];
+      Store.save(state); renderAll();
+    }
+    if(b.dataset.delwip){
+      delete state.wip[b.dataset.delwip];
+      Store.save(state); renderAll();
+    }
+    if(b.dataset.delpack){
+      delete state.pack[b.dataset.delpack];
+      Store.save(state); renderAll();
+    }
+    if(b.dataset.delord){
+      const id = b.dataset.delord;
+      state.orders = state.orders.filter(x=>x.id!==id);
+      // 연결 세트도 같이 정리
+      state.sets = state.sets.filter(s=>s.orderId!==id);
+      Store.save(state); renderAll();
+    }
+    if(b.dataset.delset){
+      const id = b.dataset.delset;
+      const s = state.sets.find(x=>x.id===id);
+      if(s){
+        // 계획 삭제 시 발주 목표(items)도 줄일지 여부는 회사 방식에 따라 다름
+        // 여기서는 "계획 자체를 지우면 목표도 같이 줄어드는" 쪽으로 처리
+        const o = state.orders.find(x=>x.id===s.orderId);
+        if(o && o.items && o.items[s.product]!=null){
+          o.items[s.product] = Math.max(0, n(o.items[s.product]) - n(s.qtyPlan));
+        }
+      }
+      state.sets = state.sets.filter(x=>x.id!==id);
+      Store.save(state); renderAll();
+    }
+    if(b.dataset.delmap){
+      delete state.map[b.dataset.delmap];
+      Store.save(state); renderAll();
+    }
+    if(b.dataset.delprinter){
+      const name = b.dataset.delprinter;
+      state.printers = state.printers.filter(x=>x!==name);
+      Store.save(state); renderAll();
+    }
+    if(b.dataset.deltmeta){
+      delete state.tapeMeta[b.dataset.deltmeta];
+      Store.save(state); renderAll();
+    }
+  });
+
+  // on change: update mapping hint / set list
+  ["set_product","ex_order","ex_set"].forEach(id=>{
+    const el = $(id);
+    if(el) el.onchange = ()=> renderAll();
+  });
+}
+
+function exportCSV(){
+  // logs to csv
+  const cols = ["dateISO","product","prevStock","lot","totalQty","printer","good","bad","currStock","tapeCode","tapeSheets","note"];
+  const lines = [cols.join(",")];
+  for(const l of state.logs){
+    const row = cols.map(c=>csvEscape(l[c]));
+    lines.push(row.join(","));
+  }
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `tape_keeper_logs_${todayISO()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(v){
+  const s = String(v ?? "");
+  if(/[",\n]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+  return s;
+}
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+/* ---------- Init ---------- */
+setTabs();
+bindEvents();
+renderAll();
+</script>
+</body>
+</html>
