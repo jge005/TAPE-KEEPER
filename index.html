@@ -3,203 +3,212 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TAPE KEEPER - 통합 공정 관리</title>
+  <title>TAPE KEEPER - 핵심 공정 관리</title>
   <style>
-    :root{
-      --bg:#f7f7fb; --card:#ffffff; --ink:#1f2430; --muted:#6b7280; --line:#e5e7eb;
-      --pri:#6d5efc; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
-      --shadow:0 10px 25px rgba(15,23,42,.08); --r:16px; --pad:14px;
+    :root {
+      --bg: #f8fafc; --card: #ffffff; --pri: #6d5efc; --ink: #1e293b;
+      --line: #e2e8f0; --muted: #64748b; --shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
-      color:var(--ink); background:linear-gradient(140deg,#f7f7fb,#f2f0ff,#fff6fb);
-    }
-    header{ position:sticky; top:0; z-index:5; backdrop-filter:saturate(140%) blur(10px); background:rgba(255,255,255,.72); border-bottom:1px solid var(--line); }
-    .wrap{max-width:1180px; margin:0 auto; padding:16px 16px 28px}
-    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between}
-    .brand{display:flex; gap:10px; align-items:center}
-    .logo{ width:42px; height:42px; border-radius:14px; background:linear-gradient(145deg,#6d5efc,#ff5fa2); box-shadow:var(--shadow); }
-    h1{font-size:18px; margin:0}
-    .sub{font-size:12px; color:var(--muted); margin-top:2px}
-    .pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:999px; background:#fff; box-shadow:0 6px 18px rgba(15,23,42,.05); font-size:12px; color:var(--muted); }
-    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-    .tab{ cursor:pointer; user-select:none; padding:10px 12px; border:1px solid var(--line); background:rgba(255,255,255,.85); border-radius:999px; font-size:13px; }
-    .tab.active{ border-color:rgba(109,94,252,.35); box-shadow:0 10px 24px rgba(109,94,252,.12); background:#fff; color:var(--pri); font-weight:700; }
-    .grid{display:grid; grid-template-columns: 1fr; gap:14px; margin-top:14px}
-    @media(min-width:980px){ .grid.two{grid-template-columns: 1.2fr .8fr} }
-    .card{ background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:var(--pad); }
-    .card h2{font-size:14px; margin:0 0 10px}
-    .muted{color:var(--muted)}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end}
-    .field{display:flex; flex-direction:column; gap:6px; min-width:160px; flex:1}
-    label{font-size:12px; color:var(--muted)}
-    input, select, textarea{ width:100%; padding:10px 10px; border:1px solid var(--line); border-radius:12px; background:#fff; outline:none; font-size:13px; }
-    button{ cursor:pointer; border:1px solid var(--line); background:#fff; padding:10px 12px; border-radius:12px; font-size:13px; }
-    button.primary{ background:var(--pri); border-color:rgba(109,94,252,.35); color:#fff; font-weight:700; box-shadow:0 10px 24px rgba(109,94,252,.20); }
-    button.danger{ background:var(--bad); color:#fff; border-color:rgba(239,68,68,.3); }
-    .kpi{display:flex; gap:10px; flex-wrap:wrap}
-    .k{ flex:1; min-width:170px; padding:12px; border:1px solid var(--line); border-radius:14px; background:#fff; }
-    .k .t{font-size:12px; color:var(--muted)}
-    .k .v{font-size:18px; font-weight:800; margin-top:6px}
-    table{width:100%; border-collapse:separate; border-spacing:0; font-size:13px}
-    th,td{padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:top}
-    th{font-size:12px; color:var(--muted); text-align:left; background:rgba(249,250,251,.7); position:sticky; top:0}
-    .tableWrap{max-height:360px; overflow:auto; border:1px solid var(--line); border-radius:14px}
-    .right{ text-align:right }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    .hidden{display:none !important}
-    @media print{ header, .noPrint{display:none !important} body{background:#fff} .card{box-shadow:none} .tableWrap{max-height:none; overflow:visible} }
+    * { box-sizing: border-box; font-family: sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--ink); }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
+    header { background: #fff; border-bottom: 1px solid var(--line); padding: 15px 0; margin-bottom: 20px; position: sticky; top: 0; z-index: 10; }
+    .nav { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+    .tab-btn { padding: 10px 20px; border-radius: 20px; border: 1px solid var(--line); background: #fff; cursor: pointer; white-space: nowrap; font-size: 14px; }
+    .tab-btn.active { background: var(--pri); color: #fff; border-color: var(--pri); font-weight: bold; }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--line); margin-bottom: 20px; }
+    h2 { font-size: 16px; margin: 0 0 15px 0; color: var(--pri); }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+    .field { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 12px; color: var(--muted); }
+    input, select { padding: 10px; border: 1px solid var(--line); border-radius: 8px; outline: none; }
+    button.main-btn { padding: 10px 20px; background: var(--pri); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 12px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { color: var(--muted); font-weight: normal; }
+    .right { text-align: right; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
+
 <header>
   <div class="wrap">
-    <div class="topbar">
-      <div class="brand"><div class="logo"></div><div><h1>TAPE KEEPER</h1><div class="sub">자재·재공·발주·세트(LOT)·작업일지 자동화</div></div></div>
-      <div class="row"><div class="pill"><span>저장</span><b id="saveState" class="mono">Local</b></div><button class="danger" id="btnReset">초기화</button></div>
-    </div>
-    <div class="tabs noPrint" id="tabs">
-      <div class="tab active" data-tab="dash">대시보드</div>
-      <div class="tab" data-tab="materials">자재(원단/실무)</div>
-      <div class="tab" data-tab="products">제품·재공(WIP)</div>
-      <div class="tab" data-tab="orders">발주·계획(세트/LOT)</div>
-      <div class="tab" data-tab="exec">작업 실행·일지</div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h1 style="margin:0; font-size:20px;">TAPE KEEPER</h1>
+      <button onclick="resetData()" style="font-size:11px; color:red; border:none; background:none; cursor:pointer;">초기화</button>
     </div>
   </div>
 </header>
 
-<main class="wrap">
-  <section id="tab-dash" class="tabPage">
-    <div class="grid two">
-      <div class="card"><h2>오늘 요약</h2><div class="kpi" id="kpis"></div></div>
-      <div class="card"><h2>원단 발주 예측</h2><div class="tableWrap"><table><thead><tr><th>테이프</th><th>규격</th><th class="right">가용재고</th><th>상태</th></tr></thead><tbody id="forecastBody"></tbody></table></div></div>
+<div class="wrap">
+  <div class="nav">
+    <button class="tab-btn active" onclick="showTab('tab1')">1. 발주/재고 등록</button>
+    <button class="tab-btn" onclick="showTab('tab2')">2. 테이프 작업</button>
+    <button class="tab-btn" onclick="showTab('tab3')">3. 현황판</button>
+  </div>
+
+  <section id="tab1">
+    <div class="card">
+      <h2>발주 등록 (Order)</h2>
+      <div class="row">
+        <div class="field"><label>발주명</label><input id="ord_name" placeholder="예: 7125Y 2000개" /></div>
+        <div class="field"><label>목표 수량</label><input id="ord_goal" type="number" /></div>
+        <button class="main-btn" onclick="addOrder()">발주 생성</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>테이프 작업 전 재고 등록 (WIP)</h2>
+      <div class="row">
+        <div class="field"><label>제품명</label><input id="wip_name" placeholder="예: 7125Y" /></div>
+        <div class="field"><label>현재 재고(EA)</label><input id="wip_qty" type="number" /></div>
+        <button class="main-btn" onclick="addWip()">재고 등록</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>실무 테이프 기초 재고</h2>
+      <div class="row">
+        <div class="field"><label>테이프 번호</label><input id="t_name" placeholder="예: 6855" /></div>
+        <div class="field"><label>보유 장수(Sheets)</label><input id="t_qty" type="number" /></div>
+        <button class="main-btn" onclick="addTape()">테이프 입고</button>
+      </div>
     </div>
   </section>
 
-  <section id="tab-orders" class="tabPage hidden">
-    <div class="grid two">
-      <div class="card">
-        <h2>발주 등록 (Order Master)</h2>
-        <div class="row">
-          <div class="field"><label>발주명</label><input id="ord_title" placeholder="예: 7125Y 2000개" /></div>
-          <div class="field"><label>목표 수량(EA)</label><input id="ord_goal_input" type="number" placeholder="2000" /></div>
-          <div class="field"><label>납기일</label><input id="ord_due" type="date" /></div>
-          <div class="btns"><button class="primary" id="ord_add">발주 생성</button></div>
-        </div>
-        <div class="tableWrap" style="margin-top:10px">
-          <table><thead><tr><th>납기</th><th>발주명</th><th class="right">목표</th><th class="right">완료</th><th>삭제</th></tr></thead><tbody id="ord_table"></tbody></table>
-        </div>
+  <section id="tab2" class="hidden">
+    <div class="card">
+      <h2>테이프 작업 실행 (Execution)</h2>
+      <div class="row">
+        <div class="field"><label>작업할 발주</label><select id="ex_order_sel"></select></div>
+        <div class="field"><label>대상 제품(WIP)</label><select id="ex_wip_sel"></select></div>
       </div>
-      <div class="card">
-        <h2>세트/LOT 계획 (Execution Plan)</h2>
-        <div class="row">
-          <div class="field"><label>발주 선택</label><select id="set_order_select"></select></div>
-          <div class="field"><label>제품명</label><select id="set_product_select" onchange="autoMatchHint()"></select></div>
-          <div class="field"><label>발행 LOT</label><input id="set_lot_input" placeholder="A-0120-1" /></div>
-        </div>
-        <div class="row" style="margin-top:10px">
-          <div class="field"><label>수량(EA)</label><input id="set_qty_input" type="number" /></div>
-          <div class="field"><label>자동 매칭 정보</label><input id="set_auto_hint" disabled style="color:var(--pri); font-weight:bold" /></div>
-          <div class="btns"><button class="primary" id="set_add_btn">세트 추가</button></div>
-        </div>
-        <div class="tableWrap" style="margin-top:10px">
-          <table><thead><tr><th>발주</th><th>LOT</th><th>제품</th><th class="right">수량</th><th>테이프</th><th class="right">삭제</th></tr></thead><tbody id="set_table"></tbody></table>
-        </div>
+      <div class="row">
+        <div class="field"><label>작업 수량(EA)</label><input id="ex_qty" type="number" /></div>
+        <div class="field"><label>사용할 테이프</label><select id="ex_tape_sel"></select></div>
+        <div class="field"><label>배열수(장당)</label><input id="ex_arr" type="number" value="8" /></div>
       </div>
+      <button class="main-btn" style="width:100%" onclick="doWork()">작업 완료 (재고 차감)</button>
     </div>
   </section>
-</main>
+
+  <section id="tab3" class="hidden">
+    <div class="card">
+      <h2>발주 달성 현황</h2>
+      <table id="order_table"><thead><tr><th>발주명</th><th>목표</th><th>완료</th><th>달성률</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h2>남은 테이프 현황</h2>
+      <table id="tape_table"><thead><tr><th>테이프</th><th>남은 장수</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h2>작업 전 제품(WIP) 현황</h2>
+      <table id="wip_table"><thead><tr><th>제품명</th><th>남은 수량(EA)</th></tr></thead><tbody></tbody></table>
+    </div>
+  </section>
+</div>
 
 <script>
-const Store = {
-  key: "TAPE_KEEPER_V3",
-  load(){ return JSON.parse(localStorage.getItem(this.key)) || seedState(); },
-  save(state){ localStorage.setItem(this.key, JSON.stringify(state)); }
+let state = JSON.parse(localStorage.getItem('TK_CORE')) || {
+  orders: [], wip: {}, tapes: {}, logs: []
 };
 
-function seedState(){
-  return {
-    orders: [], sets: [],
-    tapeMeta: {
-      "6855": {size: "450x237"}, "6405": {size: "470x130"}, "6406": {size: "470x130"},
-      "RR7000": {size: "510x295"}, "5869": {size: "410x315"}, "6491": {size: "450x120"},
-      "4195": {size: "470x237"}, "4221": {size: "195x385"}, "7011": {size: "550x315"}, "6934": {size: "510x195"}
-    },
-    map: {
-      "7125": {tape: "6855", arr: 8}, "6855": {tape: "6855", arr: 8}, "6405": {tape: "6405", arr: 2},
-      "24001W": {tape: "6406", arr: 2}, "21802Z": {tape: "6406", arr: 2}, "6491": {tape: "6491", arr: 4},
-      "2254D": {tape: "6491", arr: 4}, "4195": {tape: "4195", arr: 4}, "5869": {tape: "5869", arr: 4},
-      "6907": {tape: "RR7000", arr: 2}, "6908": {tape: "RR7000", arr: 2}, "4221": {tape: "4221", arr: 4},
-      "7011": {tape: "7011", arr: 1}, "6934": {tape: "6934", arr: 4}
-    }
-  };
+function save() {
+  localStorage.setItem('TK_CORE', JSON.stringify(state));
+  render();
 }
 
-let state = Store.load();
-const $ = (id) => document.getElementById(id);
-
-function autoMatchHint(){
-  const prod = $("set_product_select").value;
-  const matchKey = Object.keys(state.map).find(k => prod.includes(k));
-  if(matchKey){
-    const m = state.map[matchKey];
-    const meta = state.tapeMeta[m.tape].size;
-    $("set_auto_hint").value = `${m.tape} (${meta}) / 배열수 ${m.arr}`;
-  } else { $("set_auto_hint").value = ""; }
+function showTab(tabId) {
+  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+  document.getElementById(tabId).classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
 }
 
-function renderAll(){
-  renderOrders();
-  renderSets();
+function addOrder() {
+  const name = document.getElementById('ord_name').value;
+  const goal = parseInt(document.getElementById('ord_goal').value);
+  if(!name || !goal) return alert("발주명과 수량을 입력하세요.");
+  state.orders.push({ name, goal, done: 0 });
+  document.getElementById('ord_name').value = '';
+  document.getElementById('ord_goal').value = '';
+  save();
 }
 
-function renderOrders(){
-  $("ord_table").innerHTML = state.orders.map(o => `<tr><td>${o.due}</td><td><b>${o.title}</b></td><td class="right">${o.goal.toLocaleString()}</td><td class="right">${o.done}</td><td><button class="danger" onclick="delOrd('${o.id}')">삭제</button></td></tr>`).join("");
-  $("set_order_select").innerHTML = '<option value="">(선택)</option>' + state.orders.map(o => `<option value="${o.id}">${o.title}</option>`).join("");
-  const prodList = ["7125Y", "6855Q", "6405J", "24001W", "6907A", "6908C", "5869A", "4221A", "7011A", "6491P"];
-  $("set_product_select").innerHTML = '<option value="">(선택)</option>' + prodList.map(p => `<option value="${p}">${p}</option>`).join("");
+function addWip() {
+  const name = document.getElementById('wip_name').value;
+  const qty = parseInt(document.getElementById('wip_qty').value);
+  if(!name || isNaN(qty)) return alert("정보를 확인하세요.");
+  state.wip[name] = (state.wip[name] || 0) + qty;
+  save();
 }
 
-function renderSets(){
-  $("set_table").innerHTML = state.sets.map(s => {
-    const o = state.orders.find(x => x.id === s.ordId);
-    return `<tr><td>${o?o.title:'-'}</td><td>${s.lot}</td><td>${s.prod}</td><td class="right">${s.qty.toLocaleString()}</td><td>${s.tape}</td><td class="right"><button class="danger" onclick="delSet('${s.id}')">삭제</button></td></tr>`;
-  }).join("");
+function addTape() {
+  const name = document.getElementById('t_name').value;
+  const qty = parseInt(document.getElementById('t_qty').value);
+  if(!name || isNaN(qty)) return alert("정보를 확인하세요.");
+  state.tapes[name] = (state.tapes[name] || 0) + qty;
+  save();
 }
 
-$("ord_add").onclick = () => {
-  const title = $("ord_title").value;
-  const goal = parseInt($("ord_goal_input").value || 0);
-  const due = $("ord_due").value;
-  if(!title || goal <= 0) return alert("발주명과 목표 수량을 입력하세요!");
-  state.orders.push({ id: Date.now().toString(), title, goal, due, done: 0 });
-  Store.save(state); $("ord_title").value = ""; $("ord_goal_input").value = ""; renderAll();
-};
+function doWork() {
+  const ordIdx = document.getElementById('ex_order_sel').value;
+  const wipName = document.getElementById('ex_wip_sel').value;
+  const tapeName = document.getElementById('ex_tape_sel').value;
+  const qty = parseInt(document.getElementById('ex_qty').value);
+  const arr = parseInt(document.getElementById('ex_arr').value);
 
-$("set_add_btn").onclick = () => {
-  const ordId = $("set_order_select").value;
-  const prod = $("set_product_select").value;
-  const lot = $("set_lot_input").value;
-  const qty = parseInt($("set_qty_input").value || 0);
-  if(!ordId || !prod || qty <= 0) return alert("발주, 제품, 수량을 확인하세요!");
-  const matchKey = Object.keys(state.map).find(k => prod.includes(k));
-  const tape = matchKey ? state.map[matchKey].tape : "기타";
-  state.sets.push({ id: Date.now().toString(), ordId, prod, lot, qty, tape });
-  Store.save(state); $("set_lot_input").value = ""; $("set_qty_input").value = ""; renderAll();
-};
+  if(ordIdx==="" || !wipName || !tapeName || !qty) return alert("모든 칸을 채워주세요.");
+  
+  const needSheets = Math.ceil(qty / arr);
+  
+  if(state.wip[wipName] < qty) return alert("WIP 재고가 부족합니다.");
+  if(state.tapes[tapeName] < needSheets) return alert("테이프 재고가 부족합니다.");
 
-function delOrd(id){ state.orders = state.orders.filter(o => o.id !== id); state.sets = state.sets.filter(s => s.ordId !== id); Store.save(state); renderAll(); }
-function delSet(id){ state.sets = state.sets.filter(s => s.id !== id); Store.save(state); renderAll(); }
+  // 재고 차감 및 실적 더하기
+  state.wip[wipName] -= qty;
+  state.tapes[tapeName] -= needSheets;
+  state.orders[ordIdx].done += qty;
+  
+  alert(`작업 완료! 테이프 ${needSheets}장이 차감되었습니다.`);
+  save();
+}
 
-document.getElementById("tabs").onclick = (e) => {
-  const t = e.target.closest(".tab"); if(!t) return;
-  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active")); t.classList.add("active");
-  document.querySelectorAll(".tabPage").forEach(p => p.classList.add("hidden")); $("tab-" + t.dataset.tab).classList.remove("hidden");
-  renderAll();
-};
+function render() {
+  // 발주 선택박스
+  const ordSel = document.getElementById('ex_order_sel');
+  ordSel.innerHTML = state.orders.map((o, i) => `<option value="${i}">${o.name}</option>`).join('<option value="">(발주 선택)</option>');
 
-window.onload = renderAll;
+  // WIP 선택박스
+  const wipSel = document.getElementById('ex_wip_sel');
+  wipSel.innerHTML = Object.keys(state.wip).map(k => `<option value="${k}">${k}</option>`).join('<option value="">(제품 선택)</option>');
+
+  // 테이프 선택박스
+  const tapeSel = document.getElementById('ex_tape_sel');
+  tapeSel.innerHTML = Object.keys(state.tapes).map(k => `<option value="${k}">${k}</option>`).join('<option value="">(테이프 선택)</option>');
+
+  // 현황판 표
+  document.querySelector('#order_table tbody').innerHTML = state.orders.map(o => `
+    <tr><td>${o.name}</td><td>${o.goal}</td><td>${o.done}</td><td>${((o.done/o.goal)*100).toFixed(1)}%</td></tr>
+  `).join('');
+
+  document.querySelector('#tape_table tbody').innerHTML = Object.keys(state.tapes).map(k => `
+    <tr><td>${k}</td><td>${state.tapes[k]}장</td></tr>
+  `).join('');
+
+  document.querySelector('#wip_table tbody').innerHTML = Object.keys(state.wip).map(k => `
+    <tr><td>${k}</td><td>${state.wip[k]}EA</td></tr>
+  `).join('');
+}
+
+function resetData() {
+  if(confirm("모든 데이터를 초기화할까요?")) {
+    state = { orders: [], wip: {}, tapes: {}, logs: [] };
+    save();
+  }
+}
+
+window.onload = render;
 </script>
 </body>
 </html>
