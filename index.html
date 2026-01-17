@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAPE KEEPER - Tape Stock Ver.</title>
+    <title>TAPE KEEPER - Final Structure</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: sans-serif; background-color: #f1f5f9; padding: 20px; }
-        .tab-btn { padding: 10px 20px; font-weight: bold; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; }
+        .tab-btn { padding: 10px 15px; font-weight: bold; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
         .tab-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
         .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         input, select { border: 1px solid #ccc; padding: 8px; border-radius: 5px; width: 100%; }
@@ -20,7 +20,7 @@
         #loading { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
-<body class="max-w-6xl mx-auto">
+<body class="max-w-7xl mx-auto">
 
     <div id="loading"><div class="text-xl font-bold text-blue-600">데이터 동기화 중...</div></div>
 
@@ -29,10 +29,11 @@
             <h1 class="text-2xl font-bold text-slate-800">TAPE KEEPER</h1>
             <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold">● 온라인</span>
         </div>
-        <div class="flex space-x-2 bg-white px-2 rounded-lg shadow-sm overflow-x-auto">
-            <button id="btn-orderTab" class="tab-btn active whitespace-nowrap">1. 발주 관리</button>
-            <button id="btn-workTab" class="tab-btn whitespace-nowrap">2. 세트 작업</button>
-            <button id="btn-tapeTab" class="tab-btn whitespace-nowrap text-indigo-600">3. 테이프 자재</button>
+        <div class="flex space-x-2 bg-white px-2 rounded-lg shadow-sm overflow-x-auto w-full md:w-auto">
+            <button id="btn-orderTab" class="tab-btn active">1. 발주 관리</button>
+            <button id="btn-workTab" class="tab-btn">2. 세트 작업</button>
+            <button id="btn-rawTab" class="tab-btn text-pink-600">3. 원단 자재</button>
+            <button id="btn-realTab" class="tab-btn text-indigo-600">4. 실무/부자재</button>
         </div>
     </div>
 
@@ -47,7 +48,6 @@
             </div>
             <button id="btnAddOrder" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg">발주 추가</button>
         </div>
-
         <div class="card">
             <h2 class="text-lg font-bold mb-4">📋 발주 현황</h2>
             <div class="overflow-x-auto">
@@ -64,41 +64,21 @@
             <div class="card border-t-4 border-indigo-500">
                 <h2 class="text-lg font-bold mb-4 text-indigo-900">📦 세트(LOT) 등록</h2>
                 <div class="space-y-3">
-                    <div><label class="text-xs text-gray-500">제품명</label><input type="text" id="wipName" placeholder="예: 7125Y"></div>
-                    <div><label class="text-xs text-gray-500">세트 이름 (LOT)</label><input type="text" id="wipLot" placeholder="예: A-1"></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-xs text-gray-500">제품명</label><input type="text" id="wipName" placeholder="예: 7125Y"></div>
+                        <div><label class="text-xs text-gray-500">세트(LOT)</label><input type="text" id="wipLot" placeholder="예: A-1"></div>
+                    </div>
                     <div><label class="text-xs text-gray-500">수량 (EA)</label><input type="number" id="wipQty" placeholder="0"></div>
                     <button id="btnAddWip" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg">세트 추가</button>
                 </div>
-                <div class="mt-4">
-                    <h3 class="text-sm font-bold text-gray-600 mb-2">대기 목록</h3>
-                    <div id="wipList" class="space-y-2 max-h-60 overflow-y-auto"></div>
-                </div>
+                <div class="mt-4"><h3 class="text-sm font-bold text-gray-600 mb-2">대기 목록</h3><div id="wipList" class="space-y-2 max-h-60 overflow-y-auto"></div></div>
             </div>
-
             <div class="card border-t-4 border-green-500">
                 <h2 class="text-lg font-bold mb-4 text-green-900">🚀 작업 실행</h2>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-xs text-gray-500 font-bold">1. 작업할 세트 선택</label>
-                        <select id="workProductSelect" class="bg-gray-50 border-2 border-green-200 p-2 rounded w-full"></select>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 font-bold">2. 작업 수량 (EA)</label>
-                        <input type="number" id="workAmount" placeholder="0" class="border-2 border-green-200 focus:border-green-500 p-2 rounded w-full">
-                    </div>
-                    
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-gray-500">사용될 테이프</span>
-                            <span id="calcTapeName" class="text-sm font-bold text-blue-600">-</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold text-gray-500">예상 소모량</span>
-                            <span id="calcTapeAmount" class="text-sm font-bold text-red-600">0장</span>
-                        </div>
-                        <div id="predictionBox" class="text-xs text-gray-500 mt-2 pt-2 border-t">세트를 선택하세요.</div>
-                    </div>
-
+                    <div><label class="text-xs text-gray-500 font-bold">1. 작업할 세트</label><select id="workProductSelect" class="bg-gray-50 border-2 border-green-200 p-2 rounded w-full"></select></div>
+                    <div><label class="text-xs text-gray-500 font-bold">2. 작업 수량 (EA)</label><input type="number" id="workAmount" placeholder="0" class="border-2 border-green-200 focus:border-green-500 p-2 rounded w-full"></div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200"><div id="predictionBox" class="text-xs text-gray-500">세트를 선택하세요.</div></div>
                     <button id="btnDoWork" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg shadow-md">작업 완료</button>
                     <div id="workResultMsg" class="p-3 bg-green-50 text-green-800 text-sm font-bold rounded text-center hidden"></div>
                 </div>
@@ -106,57 +86,70 @@
         </div>
     </div>
 
-    <div id="tapeTab" class="hidden">
+    <div id="rawTab" class="hidden">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="card lg:col-span-1 border-t-4 border-pink-500">
-                <h2 class="text-lg font-bold mb-4 text-pink-900">📥 테이프 입고</h2>
+                <h2 class="text-lg font-bold mb-4 text-pink-900">📥 원단 입고</h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs text-gray-500">테이프 종류</label>
-                        <select id="tapeTypeInput" class="bg-white">
-                            <option value="6855">6855 (450x237)</option>
-                            <option value="6405">6405 (470x130)</option>
-                            <option value="6406">6406 (470x130)</option>
-                            <option value="RR7000">RR7000 (510x295)</option>
-                            <option value="5869">5869 (410x315)</option>
-                            <option value="6491">6491 (450x120)</option>
-                            <option value="4195">4195 (470x237)</option>
-                            <option value="4221">4221 (195x385)</option>
-                            <option value="7011">7011 (550x315)</option>
-                            <option value="6934">6934 (510x195)</option>
-                            <option value="기타">기타 (직접입력)</option>
+                        <label class="text-xs text-gray-500">규격 (코드)</label>
+                        <select id="rawTypeSelect" class="bg-white border-pink-200">
+                            <option value="">(선택하세요)</option>
+                            <option value="450x237 (6855)">450x237 (6855)</option>
+                            <option value="470x130 (6405)">470x130 (6405)</option>
+                            <option value="470x130 (6406)">470x130 (6406)</option>
+                            <option value="510x295 (RR7000)">510x295 (RR7000)</option>
+                            <option value="410x315 (5869)">410x315 (5869)</option>
+                            <option value="450x120 (6491)">450x120 (6491)</option>
+                            <option value="470x237 (4195)">470x237 (4195)</option>
+                            <option value="195x385 (4221)">195x385 (4221)</option>
+                            <option value="550x315 (7011)">550x315 (7011)</option>
+                            <option value="510x195 (6934)">510x195 (6934)</option>
+                            <option value="custom">기타 (직접입력)</option>
                         </select>
+                        <input type="text" id="rawCustomInput" class="mt-2 hidden bg-pink-50" placeholder="예: 300x300 (신규)">
                     </div>
-                    <div>
-                        <label class="text-xs text-gray-500">입고 수량 (장/Sheet)</label>
-                        <input type="number" id="tapeQtyInput" placeholder="0">
-                    </div>
-                    <button id="btnAddTape" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-lg">재고 추가</button>
+                    <div><label class="text-xs text-gray-500">입고 수량 (장/Sheet)</label><input type="number" id="rawQtyInput" placeholder="0"></div>
+                    <button id="btnAddRaw" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-lg">원단 추가</button>
                 </div>
             </div>
-
             <div class="card lg:col-span-2">
-                <h2 class="text-lg font-bold mb-4">📊 테이프 재고 현황</h2>
+                <h2 class="text-lg font-bold mb-4">📊 원단 재고 현황</h2>
                 <div class="overflow-x-auto">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>테이프명</th>
-                                <th>규격</th>
-                                <th class="text-right">현재고 (장)</th>
-                                <th class="text-center">관리</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tapeListBody"></tbody>
-                    </table>
+                    <table><thead><tr><th>규격 (코드)</th><th class="text-right">재고 (장)</th><th class="text-center">관리</th></tr></thead><tbody id="rawListBody"></tbody></table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="realTab" class="hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="card lg:col-span-1 border-t-4 border-purple-500">
+                <h2 class="text-lg font-bold mb-4 text-purple-900">✂️ 실무/부자재 입고</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500">품목명</label>
+                        <input type="text" id="realNameInput" placeholder="예: 김치(우), 고데기, 6855" list="realSuggestions">
+                        <datalist id="realSuggestions">
+                            <option value="6855"><option value="김치(좌)"><option value="김치(우)">
+                            <option value="기본(좌)"><option value="기본(우)"><option value="고데기">
+                            <option value="공청기"><option value="파종기"><option value="SPIN">
+                        </datalist>
+                    </div>
+                    <div><label class="text-xs text-gray-500">입고 수량 (개)</label><input type="number" id="realQtyInput" placeholder="0"></div>
+                    <button id="btnAddReal" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 rounded-lg">실무 재고 추가</button>
+                </div>
+            </div>
+            <div class="card lg:col-span-2">
+                <h2 class="text-lg font-bold mb-4">🧺 실무 재고 현황</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="realListBody"></div>
             </div>
         </div>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAkMFlhE-19SvNS6XeHqTAHM3UTHHLb9Ww",
@@ -171,225 +164,124 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- 데이터 상태 ---
-    let orders = [];
-    let wip = [];
-    let tapes = {}; // { "6855": { qty: 100, size: "450x237" }, ... }
+    let orders = [], wip = [], rawMaterials = {}, realMaterials = {};
 
-    // --- 매핑 규칙 (User Defined) ---
-    const MAPPING = {
-        "7125": { tape: "6855", arr: 8, size: "450x237" }, "6855": { tape: "6855", arr: 8, size: "450x237" },
-        "6405": { tape: "6405", arr: 2, size: "470x130" }, "6907": { tape: "RR7000", arr: 2, size: "510x295" },
-        "6908": { tape: "RR7000", arr: 2, size: "510x295" }, "5869": { tape: "5869", arr: 4, size: "410x315" },
-        "6491": { tape: "6491", arr: 4, size: "450x120" }, "4195": { tape: "4195", arr: 4, size: "470x237" },
-        "4221": { tape: "4221", arr: 4, size: "195x385" }, "7011": { tape: "7011", arr: 1, size: "550x315" },
-        "6934": { tape: "6934", arr: 4, size: "510x195" }, "24001W": { tape: "6406", arr: 2, size: "470x130" },
-        "2254D": { tape: "6491", arr: 4, size: "450x120" }
-    };
-
-    const loading = document.getElementById('loading');
-
-    // --- Firebase 리스너 ---
-    
-    // 1. Orders
-    onSnapshot(query(collection(db, "orders")), (snap) => {
-        orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderOrders();
-        loading.style.display = 'none';
-    });
-
-    // 2. WIP
-    onSnapshot(query(collection(db, "wip")), (snap) => {
-        wip = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderWip();
-    });
-
-    // 3. Tapes (새로 추가됨)
-    onSnapshot(query(collection(db, "tapes")), (snap) => {
-        tapes = {};
-        snap.docs.forEach(d => { tapes[d.id] = d.data(); });
-        renderTapes();
-    });
+    // 로딩 숨김
+    onSnapshot(query(collection(db, "orders")), (snap) => { orders = snap.docs.map(d => ({id:d.id, ...d.data()})); renderOrders(); document.getElementById('loading').style.display='none'; });
+    onSnapshot(query(collection(db, "wip")), (snap) => { wip = snap.docs.map(d => ({id:d.id, ...d.data()})); renderWip(); });
+    onSnapshot(query(collection(db, "raw_materials")), (snap) => { rawMaterials={}; snap.docs.forEach(d=>{rawMaterials[d.id]=d.data()}); renderRaw(); });
+    onSnapshot(query(collection(db, "real_materials")), (snap) => { realMaterials={}; snap.docs.forEach(d=>{realMaterials[d.id]=d.data()}); renderReal(); });
 
     // --- 기능 함수 ---
-
-    // [발주]
+    
+    // [1] 발주
     window.addOrder = async () => {
         const date = document.getElementById('inputDate').value;
         const title = document.getElementById('inputTitle').value;
         const goal = parseInt(document.getElementById('inputGoal').value);
-        const memo = document.getElementById('inputMemo').value;
-        if (!date || !title || !goal) return alert("필수 정보 입력");
-        await addDoc(collection(db, "orders"), { date, title, goal, memo, done: 0 });
+        if(!date || !title || !goal) return alert("입력 확인");
+        await addDoc(collection(db, "orders"), { date, title, goal, memo: document.getElementById('inputMemo').value, done: 0 });
         document.getElementById('inputTitle').value=''; document.getElementById('inputGoal').value='';
     };
-    window.deleteOrder = async (id) => { if(confirm('삭제?')) await deleteDoc(doc(db, "orders", id)); };
-    window.updateOrder = async (id, field, val) => { 
-        await updateDoc(doc(db, "orders", id), { [field]: field==='goal'?parseInt(val):val }); 
-    };
+    window.deleteOrder = async(id) => { if(confirm('삭제?')) await deleteDoc(doc(db, "orders", id)); };
+    window.updateOrder = async(id, f, v) => await updateDoc(doc(db, "orders", id), {[f]: f==='goal'?parseInt(v):v});
 
-    // [세트]
+    // [2] 세트(WIP)
     window.addWip = async () => {
-        const name = document.getElementById('wipName').value.trim();
-        const lot = document.getElementById('wipLot').value.trim();
+        const name = document.getElementById('wipName').value;
+        const lot = document.getElementById('wipLot').value;
         const qty = parseInt(document.getElementById('wipQty').value);
-        if (!name || !lot || !qty) return alert("정보 확인");
+        if(!name || !lot || !qty) return alert("입력 확인");
         await addDoc(collection(db, "wip"), { name, lot, qty });
-        document.getElementById('wipQty').value=''; document.getElementById('wipLot').value='';
+        document.getElementById('wipQty').value='';
     };
-    window.deleteWip = async (id) => { if(confirm('세트 삭제?')) await deleteDoc(doc(db, "wip", id)); };
+    window.deleteWip = async(id) => await deleteDoc(doc(db, "wip", id));
 
-    // [테이프 자재]
-    window.addTape = async () => {
-        const type = document.getElementById('tapeTypeInput').value;
-        const qty = parseInt(document.getElementById('tapeQtyInput').value);
-        if(!type || !qty) return alert("정보 확인");
-
-        // 기존 재고 확인
-        const tapeRef = doc(db, "tapes", type);
-        const tapeSnap = await getDoc(tapeRef);
+    // [3] 원단 자재 (사이즈 메인)
+    window.addRaw = async () => {
+        let type = document.getElementById('rawTypeSelect').value;
+        if(type === 'custom') type = document.getElementById('rawCustomInput').value;
+        const qty = parseInt(document.getElementById('rawQtyInput').value);
         
-        let newQty = qty;
-        let size = "-";
+        if(!type || !qty) return alert("규격과 수량을 입력하세요");
         
-        // 매핑에서 사이즈 정보 가져오기 (역추적)
-        // MAPPING 값 중 tape가 type과 같은 것 찾기
-        for(const k in MAPPING) {
-            if(MAPPING[k].tape === type) { size = MAPPING[k].size; break; }
-        }
-
-        if (tapeSnap.exists()) {
-            newQty += tapeSnap.data().qty;
-        }
+        const ref = doc(db, "raw_materials", type); // 문서 ID를 규격명으로 사용
+        const snap = await getDoc(ref);
+        const cur = snap.exists() ? snap.data().qty : 0;
         
-        await setDoc(tapeRef, { qty: newQty, size: size }, { merge: true });
-        document.getElementById('tapeQtyInput').value = '';
-        alert(`${type} 테이프 입고 완료! (총 ${newQty}장)`);
+        await setDoc(ref, { qty: cur + qty });
+        document.getElementById('rawQtyInput').value='';
+        alert(`원단 [${type}] 입고 완료!`);
     };
+    window.updateRaw = async(id, v) => await updateDoc(doc(db, "raw_materials", id), { qty: parseInt(v) });
 
-    window.updateTape = async (id, val) => {
-        await updateDoc(doc(db, "tapes", id), { qty: parseInt(val) });
+    // [4] 실무 자재 (이름 메인)
+    window.addReal = async () => {
+        const name = document.getElementById('realNameInput').value.trim();
+        const qty = parseInt(document.getElementById('realQtyInput').value);
+        if(!name || !qty) return alert("품목명과 수량 확인");
+
+        const ref = doc(db, "real_materials", name);
+        const snap = await getDoc(ref);
+        const cur = snap.exists() ? snap.data().qty : 0;
+        
+        await setDoc(ref, { qty: cur + qty });
+        document.getElementById('realNameInput').value=''; document.getElementById('realQtyInput').value='';
     };
-
-    // [작업 정보 미리보기 & 계산]
-    window.calcWorkInfo = () => {
-        const sel = document.getElementById('workProductSelect').value;
-        const qtyInput = document.getElementById('workAmount').value;
-        const workQty = qtyInput ? parseInt(qtyInput) : 0;
-        
-        const nameEl = document.getElementById('calcTapeName');
-        const amtEl = document.getElementById('calcTapeAmount');
-        const box = document.getElementById('predictionBox');
-        
-        if(!sel) { 
-            nameEl.innerText="-"; amtEl.innerText="0장"; box.innerText="세트를 선택하세요"; 
-            nameEl.dataset.tapeCode = ""; 
-            nameEl.dataset.arr = 1;
-            return;
-        }
-
-        const set = wip.find(x => x.id == sel);
-        if(!set) return;
-
-        // 테이프 정보 찾기
-        const key = Object.keys(MAPPING).find(k => set.name.includes(k));
-        const m = key ? MAPPING[key] : {tape:"기타", arr:1, size:"-"};
-        
-        nameEl.innerText = `${m.tape} (배열: ${m.arr})`;
-        nameEl.dataset.tapeCode = m.tape;
-        nameEl.dataset.arr = m.arr;
-
-        // 소모량 계산
-        const tapeNeeded = Math.ceil(workQty / m.arr);
-        amtEl.innerText = `${tapeNeeded}장`;
-        
-        // 현재 재고 확인
-        const curTapeQty = tapes[m.tape]?.qty || 0;
-        if(tapeNeeded > curTapeQty) {
-            amtEl.innerText += ` (재고부족! 보유: ${curTapeQty})`;
-            amtEl.className = "text-sm font-bold text-red-600 blink"; // 빨간색 강조
-        } else {
-            amtEl.className = "text-sm font-bold text-blue-600";
-        }
-
-        // 발주 매칭 미리보기
-        const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal)
-                              .sort((a,b)=>new Date(a.date)-new Date(b.date));
-        
-        if(targets.length > 0) {
-            const first = targets[0];
-            box.innerText = `우선 ${first.date} 납기 (${first.title})로 배분됩니다.`;
-        } else {
-            box.innerText = "매칭되는 발주가 없습니다. (재고/자재만 차감)";
-        }
-    }
+    window.updateReal = async(id, v) => await updateDoc(doc(db, "real_materials", id), { qty: parseInt(v) });
 
     // [작업 실행]
+    window.autoMatchInfo = () => {
+        const sel = document.getElementById('workProductSelect').value;
+        const box = document.getElementById('predictionBox');
+        if(!sel) { box.innerText="세트를 선택하세요"; return; }
+        const set = wip.find(x => x.id == sel);
+        const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal).sort((a,b)=>new Date(a.date)-new Date(b.date));
+        if(targets.length > 0) box.innerText = `[${targets[0].date} ${targets[0].title}] 발주로 우선 배분됩니다.`;
+        else box.innerText = "매칭되는 발주가 없습니다 (재고만 차감)";
+    };
+
     window.doWork = async () => {
         const sel = document.getElementById('workProductSelect').value;
         const qty = parseInt(document.getElementById('workAmount').value);
-        const tapeCode = document.getElementById('calcTapeName').dataset.tapeCode;
-        const arr = parseInt(document.getElementById('calcTapeName').dataset.arr || 1);
-
-        if(!sel || !qty) return alert("세트와 수량을 확인하세요");
+        if(!sel || !qty) return alert("입력 확인");
         
         const set = wip.find(x => x.id == sel);
-        if(!set) return alert("세트 오류");
-        if(set.qty < qty) return alert(`세트 재고가 부족합니다. (보유: ${set.qty})`);
-
-        // 테이프 재고 체크
-        const tapeNeeded = Math.ceil(qty / arr);
-        const curTapeQty = tapes[tapeCode]?.qty || 0;
-        
-        // 경고는 띄우지만 강제 막음은 선택 (일단 막기)
-        if(tapeCode !== "기타" && curTapeQty < tapeNeeded) {
-             if(!confirm(`테이프 재고가 부족합니다! (필요: ${tapeNeeded}, 보유: ${curTapeQty})\n그래도 강제로 진행할까요?`)) return;
-        }
+        if(set.qty < qty) return alert("세트 재고 부족");
 
         // 1. 세트 차감
-        const newWipQty = set.qty - qty;
-        if(newWipQty === 0) await deleteDoc(doc(db, "wip", sel));
-        else await updateDoc(doc(db, "wip", sel), { qty: newWipQty });
+        if(set.qty - qty === 0) await deleteDoc(doc(db, "wip", sel));
+        else await updateDoc(doc(db, "wip", sel), { qty: set.qty - qty });
 
-        // 2. 테이프 차감
-        if(tapeCode !== "기타") {
-            const newTapeQty = Math.max(0, curTapeQty - tapeNeeded);
-            // 만약 문서가 없으면 생성
-            const tapeRef = doc(db, "tapes", tapeCode);
-            await setDoc(tapeRef, { qty: newTapeQty }, { merge: true });
-        }
-
-        // 3. 발주 배분
+        // 2. 발주 배분
         let remain = qty;
-        const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal)
-                              .sort((a,b)=>new Date(a.date)-new Date(b.date));
-        
-        for (const o of targets) {
+        const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal).sort((a,b)=>new Date(a.date)-new Date(b.date));
+        for(const o of targets) {
             if(remain <= 0) break;
             const fill = Math.min(remain, o.goal - o.done);
             await updateDoc(doc(db, "orders", o.id), { done: o.done + fill });
             remain -= fill;
         }
 
-        document.getElementById('workResultMsg').innerText = `완료! ${set.name} ${qty}개 작업, 테이프 ${tapeNeeded}장 차감됨.`;
+        // 3. 실무 자재 차감 (옵션 - 나중에 연동 가능)
+        // 일단은 제품 작업 완료만 처리
+        document.getElementById('workResultMsg').innerText = `완료! ${set.name} ${qty}개 처리됨.`;
         document.getElementById('workResultMsg').classList.remove('hidden');
-        document.getElementById('workAmount').value = '';
-        setTimeout(() => window.calcWorkInfo(), 500);
-    }
+        document.getElementById('workAmount').value='';
+        window.autoMatchInfo();
+    };
 
-    // --- 렌더링 함수 ---
+    // --- 렌더링 ---
     function renderOrders() {
         const tbody = document.getElementById('orderListBody');
         tbody.innerHTML = '';
-        const sorted = [...orders].sort((a,b)=>new Date(a.date)-new Date(b.date));
-        sorted.forEach(o => {
+        orders.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(o => {
             let pct = Math.round((o.done / o.goal) * 100);
-            let bar = pct >= 100 ? 'bg-green-500' : 'bg-blue-500';
             tbody.innerHTML += `<tr>
                 <td><input type="date" value="${o.date}" onchange="updateOrder('${o.id}', 'date', this.value)" class="bg-transparent text-sm w-full"></td>
                 <td><div class="font-bold text-gray-800">${o.title}</div><div class="text-xs text-gray-500">${o.memo||''}</div></td>
                 <td><input type="number" value="${o.goal}" onchange="updateOrder('${o.id}', 'goal', this.value)" class="w-20 text-right border rounded px-1"></td>
-                <td><div class="flex justify-between text-xs mb-1"><span>${o.done.toLocaleString()}</span><span class="text-blue-600 font-bold">${pct}%</span></div><div class="progress-bar"><div class="progress-fill ${bar}" style="width:${pct>100?100:pct}%"></div></div></td>
+                <td><div class="flex justify-between text-xs mb-1"><span>${o.done.toLocaleString()}</span><span class="text-blue-600 font-bold">${pct}%</span></div><div class="progress-bar"><div class="progress-fill ${pct>=100?'bg-green-500':'bg-blue-500'}" style="width:${pct>100?100:pct}%"></div></div></td>
                 <td><button onclick="deleteOrder('${o.id}')" class="text-red-400 text-xs">삭제</button></td>
             </tr>`;
         });
@@ -399,66 +291,55 @@
         const list = document.getElementById('wipList');
         const sel = document.getElementById('workProductSelect');
         const cur = sel.value;
-        
         list.innerHTML = ''; sel.innerHTML = '<option value="">(세트 선택)</option>';
-        wip.sort((a,b)=>a.name.localeCompare(b.name));
-
-        if(wip.length===0) list.innerHTML = '<div class="text-gray-400 text-sm text-center">대기중인 세트가 없습니다.</div>';
-
-        wip.forEach(x => {
-            list.innerHTML += `<div class="bg-white border p-3 rounded shadow-sm flex justify-between items-center"><div><div class="font-bold text-gray-800">${x.name}</div><div class="text-xs text-indigo-600 font-bold">${x.lot}</div></div><div class="text-right"><div class="text-sm font-bold">${x.qty.toLocaleString()}</div><button onclick="deleteWip('${x.id}')" class="text-xs text-red-400 mt-1">삭제</button></div></div>`;
+        wip.sort((a,b)=>a.name.localeCompare(b.name)).forEach(x => {
+            list.innerHTML += `<div class="bg-white border p-2 rounded text-sm flex justify-between"><div><b>${x.name}</b> <span class="text-indigo-600">${x.lot}</span> (${x.qty})</div><button onclick="deleteWip('${x.id}')" class="text-red-400 text-xs">X</button></div>`;
             sel.innerHTML += `<option value="${x.id}">${x.name} [${x.lot}] (${x.qty})</option>`;
         });
         if(wip.find(x=>x.id==cur)) sel.value=cur;
     }
 
-    function renderTapes() {
-        const tbody = document.getElementById('tapeListBody');
+    function renderRaw() {
+        const tbody = document.getElementById('rawListBody');
         tbody.innerHTML = '';
-        const sortedKeys = Object.keys(tapes).sort();
-        
-        if(sortedKeys.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-400">등록된 자재가 없습니다.</td></tr>`;
-            return;
-        }
-
-        sortedKeys.forEach(key => {
-            const t = tapes[key];
-            const size = t.size || "-";
-            tbody.innerHTML += `<tr>
-                <td class="font-bold text-gray-700">${key}</td>
-                <td class="text-xs text-gray-500">${size}</td>
-                <td class="text-right"><input type="number" value="${t.qty}" onchange="updateTape('${key}', this.value)" class="w-20 text-right border rounded px-1 font-mono"></td>
-                <td class="text-center"><span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">자동관리</span></td>
-            </tr>`;
+        Object.keys(rawMaterials).sort().forEach(k => {
+            tbody.innerHTML += `<tr><td class="font-bold text-gray-700">${k}</td><td class="text-right"><input type="number" value="${rawMaterials[k].qty}" onchange="updateRaw('${k}', this.value)" class="w-20 text-right border px-1"></td><td class="text-center text-xs text-gray-400">자동저장</td></tr>`;
         });
     }
 
-    // 탭 전환
-    const tabs = ['orderTab', 'workTab', 'tapeTab'];
-    tabs.forEach(t => {
-        document.getElementById('btn-'+t).addEventListener('click', ()=>{
-            tabs.forEach(x => {
-                document.getElementById(x).classList.add('hidden');
-                document.getElementById('btn-'+x).classList.remove('active');
-            });
-            document.getElementById(t).classList.remove('hidden');
-            document.getElementById('btn-'+t).classList.add('active');
+    function renderReal() {
+        const div = document.getElementById('realListBody');
+        div.innerHTML = '';
+        Object.keys(realMaterials).sort().forEach(k => {
+            div.innerHTML += `<div class="bg-purple-50 border border-purple-100 p-3 rounded flex flex-col justify-between"><div class="font-bold text-purple-900 mb-2">${k}</div><div class="flex justify-between items-center"><input type="number" value="${realMaterials[k].qty}" onchange="updateReal('${k}', this.value)" class="w-20 text-right border bg-white rounded px-1"><span class="text-xs text-gray-500">개</span></div></div>`;
         });
+    }
+
+    // 탭 로직
+    const tabs = ['orderTab', 'workTab', 'rawTab', 'realTab'];
+    tabs.forEach(t => document.getElementById('btn-'+t).addEventListener('click', ()=>{
+        tabs.forEach(x => { document.getElementById(x).classList.add('hidden'); document.getElementById('btn-'+x).classList.remove('active'); });
+        document.getElementById(t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active');
+    }));
+
+    // 기타 입력창 토글
+    document.getElementById('rawTypeSelect').addEventListener('change', function() {
+        const input = document.getElementById('rawCustomInput');
+        if(this.value === 'custom') { input.classList.remove('hidden'); input.focus(); } 
+        else { input.classList.add('hidden'); }
     });
 
-    // 이벤트 연결
+    // 이벤트 리스너
     document.getElementById('btnAddOrder').addEventListener('click', window.addOrder);
     document.getElementById('btnAddWip').addEventListener('click', window.addWip);
-    document.getElementById('btnAddTape').addEventListener('click', window.addTape);
+    document.getElementById('btnAddRaw').addEventListener('click', window.addRaw);
+    document.getElementById('btnAddReal').addEventListener('click', window.addReal);
     document.getElementById('btnDoWork').addEventListener('click', window.doWork);
-    
-    // 계산기 연결
-    document.getElementById('workProductSelect').addEventListener('change', window.calcWorkInfo);
-    document.getElementById('workAmount').addEventListener('input', window.calcWorkInfo);
-    
-    // 초기화
+    document.getElementById('workProductSelect').addEventListener('change', window.autoMatchInfo);
+
+    // 날짜 초기화
     document.getElementById('inputDate').valueAsDate = new Date();
+
 </script>
 </body>
 </html>
