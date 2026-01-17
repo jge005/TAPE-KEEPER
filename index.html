@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAPE KEEPER - Step 3: 자동 배분</title>
+    <title>TAPE KEEPER - Step 4: 세트(LOT) 관리</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: sans-serif; background-color: #f1f5f9; padding: 20px; }
@@ -17,15 +17,16 @@
         .progress-bar { height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin-top: 5px; }
         .progress-fill { height: 100%; background: #3b82f6; transition: width 0.3s; }
         .hidden { display: none; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-right: 5px; }
     </style>
 </head>
 <body class="max-w-5xl mx-auto">
 
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h1 class="text-2xl font-bold text-slate-800">TAPE KEEPER <span class="text-sm font-normal text-slate-500">(자동 배분 모드)</span></h1>
+        <h1 class="text-2xl font-bold text-slate-800">TAPE KEEPER <span class="text-sm font-normal text-slate-500">(세트/LOT 관리 모드)</span></h1>
         <div class="flex space-x-4 bg-white px-4 rounded-lg shadow-sm">
             <button onclick="showTab('orderTab')" id="btn-orderTab" class="tab-btn active">1. 발주 관리</button>
-            <button onclick="showTab('workTab')" id="btn-workTab" class="tab-btn">2. 작업 실행 (자동)</button>
+            <button onclick="showTab('workTab')" id="btn-workTab" class="tab-btn">2. 세트 등록 & 작업</button>
         </div>
     </div>
 
@@ -34,7 +35,7 @@
             <h2 class="text-lg font-bold mb-4">📝 발주 등록</h2>
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                 <div><label class="text-xs text-gray-500">납기일</label><input type="date" id="inputDate"></div>
-                <div class="md:col-span-2"><label class="text-xs text-gray-500">발주명 (제품명 포함 필수! 예: 7125Y)</label><input type="text" id="inputTitle" placeholder="예: 7125Y 2000개"></div>
+                <div class="md:col-span-2"><label class="text-xs text-gray-500">발주명 (제품명 포함)</label><input type="text" id="inputTitle" placeholder="예: 7125Y 2000개"></div>
                 <div><label class="text-xs text-gray-500">목표 수량</label><input type="number" id="inputGoal" placeholder="0"></div>
                 <div><label class="text-xs text-gray-500">비고</label><input type="text" id="inputMemo" placeholder="특이사항"></div>
             </div>
@@ -43,7 +44,7 @@
 
         <div class="card">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold">📋 발주 현황 (날짜순 자동 정렬)</h2>
+                <h2 class="text-lg font-bold">📋 발주 현황 (날짜순)</h2>
                 <button onclick="resetData()" class="text-xs text-red-500 underline">초기화</button>
             </div>
             <div class="overflow-x-auto">
@@ -58,64 +59,69 @@
     <div id="workTab" class="hidden">
         
         <div class="card border-l-4 border-indigo-500">
-            <h2 class="text-lg font-bold mb-4 text-indigo-900">📦 작업 전 제품(WIP) 등록</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <h2 class="text-lg font-bold mb-4 text-indigo-900">📦 세트(LOT) 개별 등록</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
-                    <label class="text-xs text-gray-500">제품명 (예: 7125Y)</label>
-                    <input type="text" id="wipName" placeholder="정확한 제품명 입력">
+                    <label class="text-xs text-gray-500">제품명</label>
+                    <input type="text" id="wipName" placeholder="예: 7125Y">
                 </div>
                 <div>
-                    <label class="text-xs text-gray-500">추가할 수량 (EA)</label>
+                    <label class="text-xs text-gray-500 font-bold text-indigo-600">세트 이름 (LOT)</label>
+                    <input type="text" id="wipLot" placeholder="예: 1차, A-1, 오전반">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500">수량 (EA)</label>
                     <input type="number" id="wipQty" placeholder="0">
                 </div>
-                <button onclick="addWip()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg">재고 추가</button>
+                <button onclick="addWip()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg">세트 추가</button>
             </div>
             
             <div class="mt-4 p-4 bg-indigo-50 rounded-lg">
-                <h3 class="text-sm font-bold text-indigo-800 mb-2">대기 중인 제품 목록 (WIP)</h3>
-                <div id="wipList" class="flex flex-wrap gap-2"></div>
+                <h3 class="text-sm font-bold text-indigo-800 mb-2">대기 중인 세트 목록</h3>
+                <div id="wipList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
             </div>
         </div>
 
         <div class="card border-l-4 border-green-500">
-            <h2 class="text-lg font-bold mb-4 text-green-900">🚀 테이프 작업 실행</h2>
-            <p class="text-sm text-gray-600 mb-4">※ 제품명만 선택하면, 날짜가 급한 발주부터 자동으로 채워집니다.</p>
+            <h2 class="text-lg font-bold mb-4 text-green-900">🚀 작업 실행</h2>
+            <p class="text-sm text-gray-600 mb-4">※ 사용할 <b>특정 세트</b>를 선택하면, 급한 발주부터 자동으로 채워집니다.</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs text-gray-500 font-bold">1. 어떤 제품을 작업했나요?</label>
+                        <label class="text-xs text-gray-500 font-bold">1. 어떤 세트를 작업했나요?</label>
                         <select id="workProductSelect" onchange="autoMatchInfo()" class="bg-gray-50 border-2 border-green-200 p-2 rounded w-full"></select>
                     </div>
                     <div>
                         <label class="text-xs text-gray-500 font-bold">2. 몇 개 만들었나요? (EA)</label>
-                        <input type="number" id="workAmount" placeholder="예: 3500" class="border-2 border-green-200 focus:border-green-500 p-2 rounded w-full">
+                        <input type="number" id="workAmount" placeholder="예: 2520" class="border-2 border-green-200 focus:border-green-500 p-2 rounded w-full">
                     </div>
                 </div>
 
                 <div class="space-y-4 bg-gray-50 p-4 rounded-lg">
                     <div>
-                        <label class="text-xs text-gray-500 font-bold">테이프 정보 (자동)</label>
+                        <label class="text-xs text-gray-500 font-bold">테이프 정보</label>
                         <input type="text" id="workTapeInfo" disabled class="bg-transparent font-mono text-sm w-full font-bold text-blue-600">
                     </div>
                     <div id="predictionBox" class="text-sm text-gray-600 mt-2">
-                        제품을 선택하면 어디로 들어갈지 미리 알려줄게.
+                        세트를 선택하면 정보가 나옵니다.
                     </div>
                 </div>
             </div>
 
             <button onclick="doWork()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg">
-                작업 완료 (자동 배분)
+                작업 완료 (해당 세트 차감)
             </button>
             <div id="workResultMsg" class="mt-4 p-3 bg-green-50 text-green-800 text-sm font-bold rounded text-center hidden"></div>
         </div>
     </div>
 
 <script>
-    // --- 데이터 관리 ---
-    let orders = JSON.parse(localStorage.getItem('TK_ORDERS')) || [];
-    let wip = JSON.parse(localStorage.getItem('TK_WIP')) || {};
-    
+    // --- 데이터 관리 (배열 구조로 변경: 같은 제품명도 여러 개 존재 가능) ---
+    let orders = JSON.parse(localStorage.getItem('TK_ORDERS_V4')) || [];
+    let wip = JSON.parse(localStorage.getItem('TK_WIP_V4')) || []; 
+    // wip 예시: [{id: 1, name: "7125Y", lot: "1차", qty: 2520}, ...]
+
     // 테이프 매핑 규칙
     const MAPPING = {
         "7125": { tape: "6855", arr: 8, size: "450x237" },
@@ -134,8 +140,8 @@
     };
 
     function saveData() {
-        localStorage.setItem('TK_ORDERS', JSON.stringify(orders));
-        localStorage.setItem('TK_WIP', JSON.stringify(wip));
+        localStorage.setItem('TK_ORDERS_V4', JSON.stringify(orders));
+        localStorage.setItem('TK_WIP_V4', JSON.stringify(wip));
         render();
     }
 
@@ -147,8 +153,6 @@
         document.getElementById('btn-orderTab').classList.remove('active');
         document.getElementById('btn-workTab').classList.remove('active');
         document.getElementById('btn-' + tabId).classList.add('active');
-        
-        // 탭 전환 시 작업완료 메시지 숨김
         document.getElementById('workResultMsg').classList.add('hidden');
     }
 
@@ -173,39 +177,61 @@
         }
     }
 
-    // --- 기능 2: WIP 관리 ---
+    // --- 기능 2: 세트(LOT) 등록 ---
     function addWip() {
         const name = document.getElementById('wipName').value.trim();
+        const lot = document.getElementById('wipLot').value.trim();
         const qty = parseInt(document.getElementById('wipQty').value);
-        if (!name || isNaN(qty)) return alert("정보를 확인하세요.");
         
-        wip[name] = (wip[name] || 0) + qty;
-        document.getElementById('wipName').value = '';
+        if (!name || !lot || isNaN(qty)) return alert("제품명, 세트이름, 수량을 모두 입력하세요.");
+        
+        // 새로운 세트 객체 생성
+        wip.push({
+            id: Date.now(),
+            name: name,
+            lot: lot,
+            qty: qty
+        });
+
+        // 입력창 초기화
         document.getElementById('wipQty').value = '';
+        document.getElementById('wipLot').value = ''; 
+        // 제품명은 연속 입력 편하게 남겨둠 (선택사항)
+        
         saveData();
     }
 
-    // --- 기능 3: 자동 작업 실행 (핵심!) ---
+    // 세트 삭제 (실수 방지)
+    function deleteWip(id) {
+        if(confirm('이 세트를 목록에서 삭제할까요?')) {
+            wip = wip.filter(item => item.id !== id);
+            saveData();
+        }
+    }
+
+    // --- 기능 3: 작업 실행 ---
     function getMatchedOrders(prodName) {
-        // 제품명이 발주 제목에 포함되어 있고, 아직 덜 끝난 발주들만 필터링
-        // 날짜순(오름차순) 정렬
         return orders.filter(o => o.title.includes(prodName) && o.done < o.goal)
                      .sort((a, b) => new Date(a.date) - new Date(b.date));
     }
 
     function autoMatchInfo() {
-        const prod = document.getElementById('workProductSelect').value;
+        const selectedId = document.getElementById('workProductSelect').value;
         const info = document.getElementById('workTapeInfo');
         const box = document.getElementById('predictionBox');
         
-        if (!prod) { 
+        if (!selectedId) { 
             info.value = ""; 
-            box.innerHTML = "제품을 선택하면 어디로 들어갈지 미리 알려줄게.";
+            box.innerHTML = "세트를 선택하세요.";
             return; 
         }
 
+        // 선택된 세트 찾기
+        const selectedSet = wip.find(item => item.id == selectedId);
+        if(!selectedSet) return;
+
         // 테이프 정보
-        const key = Object.keys(MAPPING).find(k => prod.includes(k));
+        const key = Object.keys(MAPPING).find(k => selectedSet.name.includes(k));
         if (key) {
             const m = MAPPING[key];
             info.value = `${m.tape} / ${m.size} / ${m.arr}배열`;
@@ -215,42 +241,50 @@
             info.dataset.arr = 1;
         }
 
-        // 어디로 들어갈지 미리보기
-        const targets = getMatchedOrders(prod);
+        // 발주 매칭 미리보기
+        const targets = getMatchedOrders(selectedSet.name);
         if (targets.length > 0) {
             let msg = `<ul class='list-disc pl-5 text-xs text-blue-700 space-y-1'>`;
             targets.forEach(t => {
                 const remain = t.goal - t.done;
-                msg += `<li><b>${t.date}</b> (${t.title}): <b>${remain}개</b> 더 필요함</li>`;
+                msg += `<li><b>${t.date}</b>: <b>${remain}개</b> 더 필요함</li>`;
             });
             msg += "</ul>";
-            box.innerHTML = `이 제품은 아래 순서대로 채워질거야:<br>${msg}`;
+            box.innerHTML = `[${selectedSet.name}] 제품은 아래 발주로 채워집니다:<br>${msg}`;
         } else {
-            box.innerHTML = `<span class='text-red-500 font-bold'>주의!</span> "${prod}" 이름이 들어간 미완료 발주가 없어.<br>그냥 재고만 차감될거야.`;
+            box.innerHTML = `<span class='text-red-500 font-bold'>주의!</span> 매칭되는 미완료 발주가 없습니다.<br>재고만 차감됩니다.`;
         }
     }
 
     function doWork() {
-        const prodName = document.getElementById('workProductSelect').value;
+        const selectedId = document.getElementById('workProductSelect').value;
         const workQty = parseInt(document.getElementById('workAmount').value);
         const arr = parseInt(document.getElementById('workTapeInfo').dataset.arr || 1);
 
-        if (!prodName || !workQty) return alert("제품과 수량을 입력하세요.");
-        if ((wip[prodName] || 0) < workQty) return alert("WIP 재고 부족! 먼저 등록하세요.");
+        if (!selectedId || !workQty) return alert("세트와 수량을 확인하세요.");
 
-        // 1. WIP 차감
-        wip[prodName] -= workQty;
-        if (wip[prodName] === 0) delete wip[prodName];
+        // 선택된 세트 찾기
+        const selectedSet = wip.find(item => item.id == selectedId);
+        if (!selectedSet) return alert("세트 정보를 찾을 수 없습니다.");
+        
+        if (selectedSet.qty < workQty) return alert(`[${selectedSet.lot}] 세트의 재고가 부족합니다. (남은양: ${selectedSet.qty})`);
+
+        // 1. 해당 세트 재고 차감
+        selectedSet.qty -= workQty;
+        // 수량이 0이면 삭제할지 말지는 사용자 선택? 일단 0으로 유지 (기록용) 또는 자동 삭제
+        if(selectedSet.qty === 0) {
+            wip = wip.filter(item => item.id != selectedId); // 자동 삭제
+        }
 
         // 2. 발주 자동 채우기 (FIFO)
         let remain = workQty;
         let log = [];
-        const targets = getMatchedOrders(prodName);
+        const targets = getMatchedOrders(selectedSet.name);
 
         targets.forEach(o => {
             if (remain <= 0) return;
             const needed = o.goal - o.done;
-            const fill = Math.min(remain, needed); // 남은 작업량과 필요량 중 작은 것
+            const fill = Math.min(remain, needed);
             
             o.done += fill;
             remain -= fill;
@@ -259,23 +293,19 @@
 
         // 3. 결과 표시
         const tapeUsed = Math.ceil(workQty / arr);
-        let msg = `✅ <b>${prodName} ${workQty}개</b> 작업 완료!<br>📼 테이프 약 <b>${tapeUsed}장</b> 소모.<br>`;
+        let msg = `✅ <b>[${selectedSet.lot}] 세트</b>에서 <b>${workQty}개</b> 작업 완료!<br>📼 테이프 약 <b>${tapeUsed}장</b> 소모.<br>`;
         
         if (log.length > 0) {
-            msg += `<br>📂 <b>자동 배분 결과:</b><br>` + log.join('<br>');
-            if (remain > 0) msg += `<br>(남은 ${remain}개는 발주 매칭 없이 작업됨)`;
-        } else {
-            msg += `<br>⚠️ 매칭된 발주가 없어서 재고만 차감됐어.`;
+            msg += `<br>📂 <b>배분 결과:</b><br>` + log.join('<br>');
         }
-
+        
         const resBox = document.getElementById('workResultMsg');
         resBox.innerHTML = msg;
         resBox.classList.remove('hidden');
         document.getElementById('workAmount').value = '';
         
         saveData();
-        // 목록 갱신을 위해 미리보기 업데이트
-        autoMatchInfo();
+        autoMatchInfo(); // 갱신
     }
 
     // --- 렌더링 ---
@@ -283,7 +313,6 @@
         // 발주 목록
         const tbody = document.getElementById('orderListBody');
         tbody.innerHTML = '';
-        // 날짜순 정렬
         orders.sort((a, b) => new Date(a.date) - new Date(b.date));
         
         orders.forEach(o => {
@@ -305,26 +334,44 @@
             tbody.appendChild(tr);
         });
 
-        // WIP 목록 (뱃지)
+        // WIP 목록 (카드 형태) & 선택 박스
         const wipList = document.getElementById('wipList');
         const prodSel = document.getElementById('workProductSelect');
-        const currentProd = prodSel.value;
+        const currentSel = prodSel.value; // 선택 상태 유지 노력
         
         wipList.innerHTML = '';
-        prodSel.innerHTML = '<option value="">(제품 선택)</option>';
+        prodSel.innerHTML = '<option value="">(세트를 선택하세요)</option>';
         
-        const wipKeys = Object.keys(wip).sort();
-        if (wipKeys.length === 0) wipList.innerHTML = '<span class="text-sm text-gray-400">등록된 제품이 없습니다.</span>';
+        if (wip.length === 0) wipList.innerHTML = '<span class="text-sm text-gray-400 p-2">등록된 세트가 없습니다.</span>';
         
-        wipKeys.forEach(name => {
-            wipList.innerHTML += `<span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm border border-indigo-200">${name}: ${wip[name].toLocaleString()}</span>`;
-            prodSel.innerHTML += `<option value="${name}">${name} (보유: ${wip[name]})</option>`;
+        // 정렬: 제품명 순 -> 세트명 순
+        wip.sort((a, b) => a.name.localeCompare(b.name) || a.lot.localeCompare(b.lot));
+
+        wip.forEach(item => {
+            // 목록 카드
+            wipList.innerHTML += `
+                <div class="bg-white border border-gray-200 p-3 rounded shadow-sm flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-gray-800">${item.name}</div>
+                        <div class="text-xs text-indigo-600 font-bold">세트: ${item.lot}</div>
+                        <div class="text-sm text-gray-600">${item.qty.toLocaleString()} EA</div>
+                    </div>
+                    <button onclick="deleteWip(${item.id})" class="text-xs text-red-400 border border-red-200 px-2 py-1 rounded hover:bg-red-50">삭제</button>
+                </div>
+            `;
+            
+            // 선택 박스 (중요: id를 value로 사용)
+            prodSel.innerHTML += `<option value="${item.id}">${item.name} [${item.lot}] (잔여: ${item.qty})</option>`;
         });
-        prodSel.value = currentProd;
+        
+        // 만약 이전에 선택한게 아직 유효하면 유지
+        if(wip.find(x => x.id == currentSel)) {
+            prodSel.value = currentSel;
+        }
     }
 
     function resetData() {
-        if(confirm("초기화 할까요?")) {
+        if(confirm("모든 데이터를 초기화하시겠습니까?")) {
             localStorage.clear();
             location.reload();
         }
