@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAPE KEEPER - Configurable</title>
+    <title>TAPE KEEPER - Clean Rules</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: sans-serif; background-color: #f1f5f9; padding: 20px; }
@@ -78,6 +78,7 @@
                 <div class="space-y-4">
                     <div><label class="text-xs text-gray-500 font-bold">1. 작업할 세트</label><select id="workProductSelect" class="bg-gray-50 border-2 border-green-200 p-2 rounded w-full"></select></div>
                     <div><label class="text-xs text-gray-500 font-bold">2. 작업 수량 (EA)</label><input type="number" id="workAmount" placeholder="0" class="border-2 border-green-200 focus:border-green-500 p-2 rounded w-full"></div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200"><div id="predictionBox" class="text-xs text-gray-500">세트를 선택하세요.</div></div>
                     <button id="btnDoWork" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg shadow-md">작업 완료</button>
                     <div id="workResultMsg" class="p-3 bg-green-50 text-green-800 text-sm font-bold rounded text-center hidden"></div>
                 </div>
@@ -108,7 +109,7 @@
                         </select>
                         <input type="text" id="rawCustomInput" class="mt-2 hidden bg-pink-50" placeholder="예: 300x300 (신규)">
                     </div>
-                    <div><label class="text-xs text-gray-500">입고 수량 (장/Sheet)</label><input type="number" id="rawQtyInput" placeholder="0"></div>
+                    <div><label class="text-xs text-gray-500">입고 수량 (장)</label><input type="number" id="rawQtyInput" placeholder="0"></div>
                     <button id="btnAddRaw" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-lg">원단 추가</button>
                 </div>
             </div>
@@ -126,19 +127,18 @@
             <div class="card lg:col-span-1 border-t-4 border-purple-500">
                 <h2 class="text-lg font-bold mb-4 text-purple-900">✂️ 실무(컷팅) 입고</h2>
                 <div class="p-3 bg-purple-50 text-xs text-purple-800 rounded mb-4">
-                    📢 입력 장수만큼 <b>원단이 1:1 차감</b>됩니다. (아래 설정에 등록된 품목만)
+                    📢 실무 이름을 정확히 입력하면 연결된 원단이 <b>1:1로 자동 차감</b>됩니다.
                 </div>
                 <div class="space-y-4">
                     <div>
                         <label class="text-xs text-gray-500">품목명 (키워드)</label>
-                        <input type="text" id="realNameInput" placeholder="예: 6855, 김치(우)" list="realSuggestions">
+                        <input type="text" id="realNameInput" placeholder="예: 김치(우), 6855" list="realSuggestions">
                         <datalist id="realSuggestions"></datalist>
                     </div>
-                    <div><label class="text-xs text-gray-500">입고 수량 (장/EA)</label><input type="number" id="realQtyInput" placeholder="0"></div>
+                    <div><label class="text-xs text-gray-500">입고 수량 (장)</label><input type="number" id="realQtyInput" placeholder="0"></div>
                     <button id="btnAddReal" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 rounded-lg">실무 입고 (원단 차감)</button>
                 </div>
             </div>
-
             <div class="card lg:col-span-2">
                 <h2 class="text-lg font-bold mb-4">🧺 실무 재고 현황</h2>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="realListBody"></div>
@@ -146,11 +146,12 @@
         </div>
 
         <div class="card border-t-4 border-gray-500 mt-6">
-            <h2 class="text-lg font-bold mb-4 text-gray-800">⚙️ 배열/규격 설정 (관리자용)</h2>
-            <p class="text-sm text-gray-500 mb-4">여기 등록된 규칙대로 원단이 차감되거나, 작업 시 배열수가 계산됩니다. (수정 가능)</p>
-            
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-800">⚙️ 매핑/규격 설정</h2>
+                <button onclick="resetRules()" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200">🔄 기본 규칙으로 초기화</button>
+            </div>
             <div class="flex flex-col md:flex-row gap-2 mb-4 p-4 bg-gray-50 rounded">
-                <input type="text" id="mapKey" placeholder="품목 키워드 (예: 6855, 김치)" class="flex-1">
+                <input type="text" id="mapKey" placeholder="실무 이름 (예: 김치(우))" class="flex-1">
                 <select id="mapRaw" class="flex-1 bg-white">
                     <option value="450x237 (6855)">450x237 (6855)</option>
                     <option value="470x130 (6405)">470x130 (6405)</option>
@@ -163,24 +164,16 @@
                     <option value="550x315 (7011)">550x315 (7011)</option>
                     <option value="510x195 (6934)">510x195 (6934)</option>
                 </select>
-                <input type="number" id="mapArr" placeholder="배열수" class="w-24">
-                <button id="btnAddMap" class="bg-gray-700 text-white px-4 py-2 rounded font-bold">규칙 추가/수정</button>
+                <input type="number" id="mapArr" placeholder="배열" class="w-24">
+                <button id="btnAddMap" class="bg-gray-700 text-white px-4 py-2 rounded font-bold">추가</button>
             </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-gray-100"><th class="p-2 text-left">키워드</th><th class="p-2 text-left">연결 원단</th><th class="p-2 text-center">배열수</th><th class="p-2 text-center">삭제</th></tr>
-                    </thead>
-                    <tbody id="mapListBody"></tbody>
-                </table>
-            </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-100"><th class="p-2 text-left">실무 이름 (제품)</th><th class="p-2 text-left">연결 원단 (Raw)</th><th class="p-2 text-center">배열</th><th class="p-2 text-center">관리</th></tr></thead><tbody id="mapListBody"></tbody></table></div>
         </div>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAkMFlhE-19SvNS6XeHqTAHM3UTHHLb9Ww",
@@ -195,108 +188,88 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- 데이터 상태 ---
     let orders = [], wip = [], rawMaterials = {}, realMaterials = {}, mappings = {};
 
-    // --- 리스너 ---
     onSnapshot(query(collection(db, "orders")), (snap) => { orders = snap.docs.map(d => ({id:d.id, ...d.data()})); renderOrders(); document.getElementById('loading').style.display='none'; });
     onSnapshot(query(collection(db, "wip")), (snap) => { wip = snap.docs.map(d => ({id:d.id, ...d.data()})); renderWip(); });
     onSnapshot(query(collection(db, "raw_materials")), (snap) => { rawMaterials={}; snap.docs.forEach(d=>{rawMaterials[d.id]=d.data()}); renderRaw(); });
     onSnapshot(query(collection(db, "real_materials")), (snap) => { realMaterials={}; snap.docs.forEach(d=>{realMaterials[d.id]=d.data()}); renderReal(); });
-    // [NEW] 매핑 리스너
     onSnapshot(query(collection(db, "mappings")), (snap) => { 
-        mappings={}; 
-        snap.docs.forEach(d=>{mappings[d.id]=d.data()}); 
-        
-        // 초기 데이터 없으면 시드 데이터 주입 (한번만)
-        if(Object.keys(mappings).length === 0) seedMappings();
-        else {
-            renderMappings(); 
-            updateDataList();
-        }
+        mappings={}; snap.docs.forEach(d=>{mappings[d.id]=d.data()}); 
+        if(Object.keys(mappings).length===0) seedMappings(); else { renderMappings(); updateDataList(); }
     });
 
-    // --- 초기 시드 데이터 (DB가 비었을 때만 실행) ---
+    // --- 초기화 및 리셋 (정리된 리스트) ---
     async function seedMappings() {
         const defaults = {
-            "6855": { raw: "450x237 (6855)", arr: 8 }, "7125": { raw: "450x237 (6855)", arr: 8 },
-            "6405": { raw: "470x130 (6405)", arr: 2 }, "6406": { raw: "470x130 (6406)", arr: 2 },
-            "김치": { raw: "510x295 (RR7000)", arr: 2 }, "기본": { raw: "510x295 (RR7000)", arr: 2 },
-            "6907": { raw: "510x295 (RR7000)", arr: 2 }, "6908": { raw: "510x295 (RR7000)", arr: 2 },
-            "RR7000": { raw: "510x295 (RR7000)", arr: 2 }, "5869": { raw: "410x315 (5869)", arr: 4 },
-            "6491": { raw: "450x120 (6491)", arr: 4 }, "4195": { raw: "470x237 (4195)", arr: 4 },
-            "4221": { raw: "195x385 (4221)", arr: 4 }, "7011": { raw: "550x315 (7011)", arr: 1 },
+            "김치(좌)": { raw: "510x295 (RR7000)", arr: 2 },
+            "김치(우)": { raw: "510x295 (RR7000)", arr: 2 },
+            "기본(좌)": { raw: "510x295 (RR7000)", arr: 2 },
+            "기본(우)": { raw: "510x295 (RR7000)", arr: 2 },
+            "6907": { raw: "510x295 (RR7000)", arr: 2 },
+            "6908": { raw: "510x295 (RR7000)", arr: 2 },
+            "6855": { raw: "450x237 (6855)", arr: 8 },
+            "7125": { raw: "450x237 (6855)", arr: 8 },
+            "6405": { raw: "470x130 (6405)", arr: 2 },
+            "6406": { raw: "470x130 (6406)", arr: 2 },
+            "5869": { raw: "410x315 (5869)", arr: 4 },
+            "6491": { raw: "450x120 (6491)", arr: 4 },
+            "2254D": { raw: "450x120 (6491)", arr: 4 },
+            "4195": { raw: "470x237 (4195)", arr: 4 },
+            "4221": { raw: "195x385 (4221)", arr: 4 },
+            "7011": { raw: "550x315 (7011)", arr: 1 },
             "6934": { raw: "510x195 (6934)", arr: 4 }
         };
-        for(const k in defaults) await setDoc(doc(db, "mappings", k), defaults[k]);
+        const batch = writeBatch(db);
+        for(const k in defaults) batch.set(doc(db, "mappings", k), defaults[k]);
+        await batch.commit();
+        alert("규칙이 깔끔하게 초기화되었습니다!");
     }
 
-    // --- 기능 ---
-    window.addOrder = async () => {
-        const date = document.getElementById('inputDate').value; const title = document.getElementById('inputTitle').value; const goal = parseInt(document.getElementById('inputGoal').value);
-        if(!date || !title || !goal) return alert("입력 확인");
-        await addDoc(collection(db, "orders"), { date, title, goal, memo: document.getElementById('inputMemo').value, done: 0 });
-        document.getElementById('inputTitle').value=''; document.getElementById('inputGoal').value='';
+    window.resetRules = async () => {
+        if(confirm("지저분한 리스트를 싹 지우고, 기본값으로 되돌릴까요?")) {
+            // 기존 매핑 다 지우기
+            const batch = writeBatch(db);
+            Object.keys(mappings).forEach(k => batch.delete(doc(db, "mappings", k)));
+            await batch.commit();
+            // 새로 넣기
+            await seedMappings();
+        }
     };
+
+    // --- 기능 ---
+    window.addOrder = async () => { const date = document.getElementById('inputDate').value; const title = document.getElementById('inputTitle').value; const goal = parseInt(document.getElementById('inputGoal').value); if(!date || !title || !goal) return alert("입력 확인"); await addDoc(collection(db, "orders"), { date, title, goal, memo: document.getElementById('inputMemo').value, done: 0 }); document.getElementById('inputTitle').value=''; document.getElementById('inputGoal').value=''; };
     window.deleteOrder = async(id) => { if(confirm('삭제?')) await deleteDoc(doc(db, "orders", id)); };
     window.updateOrder = async(id, f, v) => await updateDoc(doc(db, "orders", id), {[f]: f==='goal'?parseInt(v):v});
 
-    window.addWip = async () => {
-        const name = document.getElementById('wipName').value; const lot = document.getElementById('wipLot').value; const qty = parseInt(document.getElementById('wipQty').value);
-        if(!name || !lot || !qty) return alert("입력 확인");
-        await addDoc(collection(db, "wip"), { name, lot, qty });
-        document.getElementById('wipQty').value='';
-    };
+    window.addWip = async () => { const name = document.getElementById('wipName').value; const lot = document.getElementById('wipLot').value; const qty = parseInt(document.getElementById('wipQty').value); if(!name || !lot || !qty) return alert("입력 확인"); await addDoc(collection(db, "wip"), { name, lot, qty }); document.getElementById('wipQty').value=''; };
     window.deleteWip = async(id) => await deleteDoc(doc(db, "wip", id));
 
-    window.addRaw = async () => {
-        let type = document.getElementById('rawTypeSelect').value; if(type === 'custom') type = document.getElementById('rawCustomInput').value;
-        const qty = parseInt(document.getElementById('rawQtyInput').value);
-        if(!type || !qty) return alert("입력 확인");
-        const ref = doc(db, "raw_materials", type); const snap = await getDoc(ref); const cur = snap.exists() ? snap.data().qty : 0;
-        await setDoc(ref, { qty: cur + qty }); document.getElementById('rawQtyInput').value='';
-    };
+    window.addRaw = async () => { let type = document.getElementById('rawTypeSelect').value; if(type === 'custom') type = document.getElementById('rawCustomInput').value; const qty = parseInt(document.getElementById('rawQtyInput').value); if(!type || !qty) return alert("입력 확인"); const ref = doc(db, "raw_materials", type); const snap = await getDoc(ref); const cur = snap.exists() ? snap.data().qty : 0; await setDoc(ref, { qty: cur + qty }); document.getElementById('rawQtyInput').value=''; };
     window.updateRaw = async(id, v) => await updateDoc(doc(db, "raw_materials", id), { qty: parseInt(v) });
 
-    // [매핑 추가/수정]
-    window.addMapping = async () => {
-        const key = document.getElementById('mapKey').value.trim();
-        const raw = document.getElementById('mapRaw').value;
-        const arr = parseInt(document.getElementById('mapArr').value);
-        if(!key || !raw || !arr) return alert("모든 항목을 입력하세요");
-        await setDoc(doc(db, "mappings", key), { raw, arr });
-        document.getElementById('mapKey').value=''; document.getElementById('mapArr').value='';
-        alert(`설정 저장됨: ${key} -> ${arr}배열`);
-    };
-    window.deleteMapping = async (id) => { if(confirm("규칙 삭제?")) await deleteDoc(doc(db, "mappings", id)); };
-    window.updateMappingArr = async (id, val) => { await updateDoc(doc(db, "mappings", id), { arr: parseInt(val) }); };
+    window.addMapping = async () => { const key = document.getElementById('mapKey').value.trim(); const raw = document.getElementById('mapRaw').value; const arr = parseInt(document.getElementById('mapArr').value); if(!key || !raw || !arr) return alert("입력 확인"); await setDoc(doc(db, "mappings", key), { raw, arr }); document.getElementById('mapKey').value=''; };
+    window.deleteMapping = async (id) => await deleteDoc(doc(db, "mappings", id));
+    window.updateMappingArr = async (id, val) => await updateDoc(doc(db, "mappings", id), { arr: parseInt(val) });
 
-    // [실무 입고] (DB 매핑 사용)
     window.addReal = async () => {
         const name = document.getElementById('realNameInput').value.trim();
         const qty = parseInt(document.getElementById('realQtyInput').value);
         if(!name || !qty) return alert("입력 확인");
 
         const mapKey = Object.keys(mappings).find(k => name.includes(k));
-        if (mapKey) {
-            const m = mappings[mapKey];
-            const rawNeeded = qty; // 1:1 차감
-            
-            const rawRef = doc(db, "raw_materials", m.raw);
-            const rawSnap = await getDoc(rawRef);
-            const rawCur = rawSnap.exists() ? snap.data().qty : 0; // Fix: snap->rawSnap, but reusing getDoc flow for simplicity
+        let rawTarget = mapKey ? mappings[mapKey].raw : (rawMaterials[name] !== undefined ? name : null);
 
-            // 원단 차감 (데이터 검증 생략하고 바로 쓰기 - 필요시 부활 가능)
-            if (rawSnap.exists()) {
-                 const curQ = rawSnap.data().qty;
-                 if(curQ < rawNeeded) { if(!confirm(`원단 [${m.raw}] 재고 부족 (${curQ}장). 진행?`)) return; }
-                 await updateDoc(rawRef, { qty: Math.max(0, curQ - rawNeeded) });
-            } else {
-                 await setDoc(rawRef, { qty: 0 }); // 없으면 0으로 시작
-            }
-            alert(`✅ ${name} 입고. (원단 ${m.raw} 차감됨)`);
+        if (rawTarget) {
+            const rawRef = doc(db, "raw_materials", rawTarget);
+            const rawSnap = await getDoc(rawRef);
+            const rawCur = rawSnap.exists() ? rawSnap.data().qty : 0;
+            const rawNeeded = qty;
+            if (rawCur < rawNeeded) { if(!confirm(`원단 [${rawTarget}] 재고 부족! (보유: ${rawCur})\n무시하고 진행?`)) return; }
+            await setDoc(rawRef, { qty: Math.max(0, rawCur - rawNeeded) }, { merge: true });
+            alert(`✅ ${name} 입고.\n📉 원단 [${rawTarget}] ${rawNeeded}장 차감.`);
         } else {
-            alert(`✅ ${name} 입고. (매칭 원단 없음)`);
+            alert(`✅ ${name} 입고.\n(매칭 원단 없음)`);
         }
 
         const realRef = doc(db, "real_materials", name);
@@ -307,16 +280,12 @@
     };
     window.updateReal = async(id, v) => await updateDoc(doc(db, "real_materials", id), { qty: parseInt(v) });
 
-    // [작업 실행]
     window.doWork = async () => {
         const sel = document.getElementById('workProductSelect').value; const qty = parseInt(document.getElementById('workAmount').value);
         if(!sel || !qty) return alert("입력 확인");
         const set = wip.find(x => x.id == sel);
         if(set.qty < qty) return alert("세트 재고 부족");
-        
-        if(set.qty - qty === 0) await deleteDoc(doc(db, "wip", sel));
-        else await updateDoc(doc(db, "wip", sel), { qty: set.qty - qty });
-
+        if(set.qty - qty === 0) await deleteDoc(doc(db, "wip", sel)); else await updateDoc(doc(db, "wip", sel), { qty: set.qty - qty });
         let remain = qty;
         const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal).sort((a,b)=>new Date(a.date)-new Date(b.date));
         for(const o of targets) {
@@ -328,44 +297,25 @@
         document.getElementById('workResultMsg').innerText = `완료! ${set.name} ${qty}개 처리됨.`;
         document.getElementById('workResultMsg').classList.remove('hidden');
         document.getElementById('workAmount').value='';
+        window.autoMatchInfo();
+    };
+    
+    window.autoMatchInfo = () => {
+        const sel = document.getElementById('workProductSelect').value;
+        const box = document.getElementById('predictionBox');
+        if(!sel) { box.innerText="세트를 선택하세요"; return; }
+        const set = wip.find(x => x.id == sel);
+        const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal).sort((a,b)=>new Date(a.date)-new Date(b.date));
+        if(targets.length > 0) box.innerText = `[${targets[0].date} ${targets[0].title}] 발주로 배분됩니다.`;
+        else box.innerText = "매칭되는 발주가 없습니다 (재고만 차감)";
     };
 
-    // --- 렌더링 ---
-    function renderOrders() {
-        const tbody = document.getElementById('orderListBody'); tbody.innerHTML = '';
-        orders.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(o => {
-            let pct = Math.round((o.done / o.goal) * 100);
-            tbody.innerHTML += `<tr><td><input type="date" value="${o.date}" onchange="updateOrder('${o.id}', 'date', this.value)" class="bg-transparent text-sm w-full"></td><td><div class="font-bold text-gray-800">${o.title}</div><div class="text-xs text-gray-500">${o.memo||''}</div></td><td><input type="number" value="${o.goal}" onchange="updateOrder('${o.id}', 'goal', this.value)" class="w-20 text-right border rounded px-1"></td><td><div class="flex justify-between text-xs mb-1"><span>${o.done.toLocaleString()}</span><span class="text-blue-600 font-bold">${pct}%</span></div><div class="progress-bar"><div class="progress-fill ${pct>=100?'bg-green-500':'bg-blue-500'}" style="width:${pct>100?100:pct}%"></div></div></td><td><button onclick="deleteOrder('${o.id}')" class="text-red-400 text-xs">삭제</button></td></tr>`;
-        });
-    }
-    function renderWip() {
-        const list = document.getElementById('wipList'); const sel = document.getElementById('workProductSelect'); const cur = sel.value;
-        list.innerHTML = ''; sel.innerHTML = '<option value="">(세트 선택)</option>';
-        wip.sort((a,b)=>a.name.localeCompare(b.name)).forEach(x => {
-            list.innerHTML += `<div class="bg-white border p-2 rounded text-sm flex justify-between"><div><b>${x.name}</b> <span class="text-indigo-600">${x.lot}</span> (${x.qty})</div><button onclick="deleteWip('${x.id}')" class="text-red-400 text-xs">X</button></div>`;
-            sel.innerHTML += `<option value="${x.id}">${x.name} [${x.lot}] (${x.qty})</option>`;
-        });
-        if(wip.find(x=>x.id==cur)) sel.value=cur;
-    }
-    function renderRaw() {
-        const tbody = document.getElementById('rawListBody'); tbody.innerHTML = '';
-        Object.keys(rawMaterials).sort().forEach(k => { tbody.innerHTML += `<tr><td class="font-bold text-gray-700">${k}</td><td class="text-right"><input type="number" value="${rawMaterials[k].qty}" onchange="updateRaw('${k}', this.value)" class="w-20 text-right border px-1"></td><td class="text-center text-xs text-gray-400">자동연동</td></tr>`; });
-    }
-    function renderReal() {
-        const div = document.getElementById('realListBody'); div.innerHTML = '';
-        Object.keys(realMaterials).sort().forEach(k => { div.innerHTML += `<div class="bg-purple-50 border border-purple-100 p-3 rounded flex flex-col justify-between"><div class="font-bold text-purple-900 mb-2">${k}</div><div class="flex justify-between items-center"><input type="number" value="${realMaterials[k].qty}" onchange="updateReal('${k}', this.value)" class="w-20 text-right border bg-white rounded px-1"><span class="text-xs text-gray-500">장</span></div></div>`; });
-    }
-    function renderMappings() {
-        const tbody = document.getElementById('mapListBody'); tbody.innerHTML = '';
-        Object.keys(mappings).sort().forEach(k => {
-            const m = mappings[k];
-            tbody.innerHTML += `<tr><td class="p-2 border-b font-bold">${k}</td><td class="p-2 border-b text-xs text-gray-500">${m.raw}</td><td class="p-2 border-b text-center"><input type="number" value="${m.arr}" onchange="updateMappingArr('${k}', this.value)" class="w-16 border text-center rounded"></td><td class="p-2 border-b text-center"><button onclick="deleteMapping('${k}')" class="text-red-400 text-xs">X</button></td></tr>`;
-        });
-    }
-    function updateDataList() {
-        const dl = document.getElementById('realSuggestions'); dl.innerHTML = '';
-        Object.keys(mappings).forEach(k => { dl.innerHTML += `<option value="${k}">`; });
-    }
+    function renderOrders() { const tbody = document.getElementById('orderListBody'); tbody.innerHTML = ''; orders.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(o => { let pct = Math.round((o.done / o.goal) * 100); tbody.innerHTML += `<tr><td><input type="date" value="${o.date}" onchange="updateOrder('${o.id}', 'date', this.value)" class="bg-transparent text-sm w-full"></td><td><div class="font-bold text-gray-800">${o.title}</div><div class="text-xs text-gray-500">${o.memo||''}</div></td><td><input type="number" value="${o.goal}" onchange="updateOrder('${o.id}', 'goal', this.value)" class="w-20 text-right border rounded px-1"></td><td><div class="flex justify-between text-xs mb-1"><span>${o.done.toLocaleString()}</span><span class="text-blue-600 font-bold">${pct}%</span></div><div class="progress-bar"><div class="progress-fill ${pct>=100?'bg-green-500':'bg-blue-500'}" style="width:${pct>100?100:pct}%"></div></div></td><td><button onclick="deleteOrder('${o.id}')" class="text-red-400 text-xs">삭제</button></td></tr>`; }); }
+    function renderWip() { const list = document.getElementById('wipList'); const sel = document.getElementById('workProductSelect'); const cur = sel.value; list.innerHTML = ''; sel.innerHTML = '<option value="">(세트 선택)</option>'; wip.sort((a,b)=>a.name.localeCompare(b.name)).forEach(x => { list.innerHTML += `<div class="bg-white border p-2 rounded text-sm flex justify-between"><div><b>${x.name}</b> <span class="text-indigo-600">${x.lot}</span> (${x.qty})</div><button onclick="deleteWip('${x.id}')" class="text-red-400 text-xs">X</button></div>`; sel.innerHTML += `<option value="${x.id}">${x.name} [${x.lot}] (${x.qty})</option>`; }); if(wip.find(x=>x.id==cur)) sel.value=cur; }
+    function renderRaw() { const tbody = document.getElementById('rawListBody'); tbody.innerHTML = ''; Object.keys(rawMaterials).sort().forEach(k => { tbody.innerHTML += `<tr><td class="font-bold text-gray-700">${k}</td><td class="text-right"><input type="number" value="${rawMaterials[k].qty}" onchange="updateRaw('${k}', this.value)" class="w-20 text-right border px-1"></td><td class="text-center text-xs text-gray-400">자동연동</td></tr>`; }); }
+    function renderReal() { const div = document.getElementById('realListBody'); div.innerHTML = ''; Object.keys(realMaterials).sort().forEach(k => { div.innerHTML += `<div class="bg-purple-50 border border-purple-100 p-3 rounded flex flex-col justify-between"><div class="font-bold text-purple-900 mb-2">${k}</div><div class="flex justify-between items-center"><input type="number" value="${realMaterials[k].qty}" onchange="updateReal('${k}', this.value)" class="w-20 text-right border bg-white rounded px-1"><span class="text-xs text-gray-500">장</span></div></div>`; }); }
+    function renderMappings() { const tbody = document.getElementById('mapListBody'); tbody.innerHTML = ''; Object.keys(mappings).sort().forEach(k => { const m = mappings[k]; tbody.innerHTML += `<tr><td class="p-2 border-b font-bold">${k}</td><td class="p-2 border-b text-xs text-gray-500">${m.raw}</td><td class="p-2 border-b text-center"><input type="number" value="${m.arr}" onchange="updateMappingArr('${k}', this.value)" class="w-16 border text-center rounded"></td><td class="p-2 border-b text-center"><button onclick="deleteMapping('${k}')" class="text-red-400 text-xs">X</button></td></tr>`; }); }
+    function updateDataList() { const dl = document.getElementById('realSuggestions'); dl.innerHTML = ''; Object.keys(mappings).forEach(k => { dl.innerHTML += `<option value="${k}">`; }); }
 
     const tabs = ['orderTab', 'workTab', 'rawTab', 'realTab'];
     tabs.forEach(t => document.getElementById('btn-'+t).addEventListener('click', ()=>{ tabs.forEach(x => { document.getElementById(x).classList.add('hidden'); document.getElementById('btn-'+x).classList.remove('active'); }); document.getElementById(t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active'); }));
@@ -377,6 +327,7 @@
     document.getElementById('btnAddReal').addEventListener('click', window.addReal);
     document.getElementById('btnDoWork').addEventListener('click', window.doWork);
     document.getElementById('btnAddMap').addEventListener('click', window.addMapping);
+    document.getElementById('workProductSelect').addEventListener('change', window.autoMatchInfo);
 
     document.getElementById('inputDate').valueAsDate = new Date();
 </script>
