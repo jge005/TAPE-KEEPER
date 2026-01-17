@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAPE KEEPER - Step 5: 수정 기능 복구</title>
+    <title>TAPE KEEPER - Cloud Ver.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: sans-serif; background-color: #f1f5f9; padding: 20px; }
@@ -17,15 +17,22 @@
         .progress-bar { height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin-top: 5px; }
         .progress-fill { height: 100%; background: #3b82f6; transition: width 0.3s; }
         .hidden { display: none; }
+        /* 로딩 스피너 */
+        #loading { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
 <body class="max-w-5xl mx-auto">
 
+    <div id="loading"><div class="text-xl font-bold text-blue-600">클라우드 동기화 중...</div></div>
+
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h1 class="text-2xl font-bold text-slate-800">TAPE KEEPER <span class="text-sm font-normal text-slate-500">(수정 기능 복구됨)</span></h1>
+        <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-bold text-slate-800">TAPE KEEPER</h1>
+            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold">● 온라인 저장됨</span>
+        </div>
         <div class="flex space-x-4 bg-white px-4 rounded-lg shadow-sm">
-            <button onclick="showTab('orderTab')" id="btn-orderTab" class="tab-btn active">1. 발주 관리</button>
-            <button onclick="showTab('workTab')" id="btn-workTab" class="tab-btn">2. 세트 등록 & 작업</button>
+            <button id="btn-orderTab" class="tab-btn active">1. 발주 관리</button>
+            <button id="btn-workTab" class="tab-btn">2. 세트 등록 & 작업</button>
         </div>
     </div>
 
@@ -34,18 +41,15 @@
             <h2 class="text-lg font-bold mb-4">📝 발주 등록</h2>
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                 <div><label class="text-xs text-gray-500">납기일</label><input type="date" id="inputDate"></div>
-                <div class="md:col-span-2"><label class="text-xs text-gray-500">발주명</label><input type="text" id="inputTitle" placeholder="예: 7125Y 2000개"></div>
+                <div class="md:col-span-2"><label class="text-xs text-gray-500">발주명 (제품명 포함)</label><input type="text" id="inputTitle" placeholder="예: 7125Y 2000개"></div>
                 <div><label class="text-xs text-gray-500">목표 수량</label><input type="number" id="inputGoal" placeholder="0"></div>
                 <div><label class="text-xs text-gray-500">비고</label><input type="text" id="inputMemo" placeholder="특이사항"></div>
             </div>
-            <button onclick="addOrder()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg">발주 추가</button>
+            <button id="btnAddOrder" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg">발주 추가 (클라우드 저장)</button>
         </div>
 
         <div class="card">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold">📋 발주 현황 (수정 가능)</h2>
-                <button onclick="resetData()" class="text-xs text-red-500 underline">초기화</button>
-            </div>
+            <h2 class="text-lg font-bold mb-4">📋 발주 현황 (실시간 동기화)</h2>
             <div class="overflow-x-auto">
                 <table>
                     <thead><tr><th style="width:140px;">날짜</th><th>발주명</th><th style="width:120px;">목표수량</th><th style="width:150px;">진행률</th><th style="width:60px;">삭제</th></tr></thead>
@@ -62,7 +66,7 @@
                 <div><label class="text-xs text-gray-500">제품명</label><input type="text" id="wipName" placeholder="예: 7125Y"></div>
                 <div><label class="text-xs text-gray-500 font-bold text-indigo-600">세트 이름 (LOT)</label><input type="text" id="wipLot" placeholder="예: A-1"></div>
                 <div><label class="text-xs text-gray-500">수량 (EA)</label><input type="number" id="wipQty" placeholder="0"></div>
-                <button onclick="addWip()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg">세트 추가</button>
+                <button id="btnAddWip" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg">세트 추가</button>
             </div>
             <div class="mt-4 p-4 bg-indigo-50 rounded-lg">
                 <h3 class="text-sm font-bold text-indigo-800 mb-2">대기 중인 세트 목록</h3>
@@ -74,7 +78,7 @@
             <h2 class="text-lg font-bold mb-4 text-green-900">🚀 작업 실행</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
-                    <div><label class="text-xs text-gray-500 font-bold">1. 어떤 세트를 작업했나요?</label><select id="workProductSelect" onchange="autoMatchInfo()" class="bg-gray-50 border-2 border-green-200 p-2 rounded w-full"></select></div>
+                    <div><label class="text-xs text-gray-500 font-bold">1. 어떤 세트를 작업했나요?</label><select id="workProductSelect" class="bg-gray-50 border-2 border-green-200 p-2 rounded w-full"></select></div>
                     <div><label class="text-xs text-gray-500 font-bold">2. 몇 개 만들었나요? (EA)</label><input type="number" id="workAmount" placeholder="0" class="border-2 border-green-200 focus:border-green-500 p-2 rounded w-full"></div>
                 </div>
                 <div class="space-y-4 bg-gray-50 p-4 rounded-lg">
@@ -82,14 +86,37 @@
                     <div id="predictionBox" class="text-sm text-gray-600 mt-2">세트를 선택하세요.</div>
                 </div>
             </div>
-            <button onclick="doWork()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg">작업 완료</button>
+            <button id="btnDoWork" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg">작업 완료</button>
             <div id="workResultMsg" class="mt-4 p-3 bg-green-50 text-green-800 text-sm font-bold rounded text-center hidden"></div>
         </div>
     </div>
 
-<script>
-    let orders = JSON.parse(localStorage.getItem('TK_ORDERS_V5')) || [];
-    let wip = JSON.parse(localStorage.getItem('TK_WIP_V5')) || []; 
+<script type="module">
+    // -----------------------------------------------------------
+    // 1. Firebase 설정 및 연결
+    // -----------------------------------------------------------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAkMFlhE-19SvNS6XeHqTAHM3UTHHLb9Ww",
+        authDomain: "tapekeeper-8070e.firebaseapp.com",
+        projectId: "tapekeeper-8070e",
+        storageBucket: "tapekeeper-8070e.firebasestorage.app",
+        messagingSenderId: "267507609999",
+        appId: "1:267507609999:web:889761a8792b0fa1a6dbfa",
+        measurementId: "G-B68XN789S1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // -----------------------------------------------------------
+    // 2. 데이터 상태 관리 (로컬 변수)
+    // -----------------------------------------------------------
+    let orders = [];
+    let wip = [];
+    const loading = document.getElementById('loading');
 
     const MAPPING = {
         "7125": { tape: "6855", arr: 8, size: "450x237" }, "6855": { tape: "6855", arr: 8, size: "450x237" },
@@ -101,57 +128,83 @@
         "2254D": { tape: "6491", arr: 4, size: "450x120" }
     };
 
-    function saveData() {
-        localStorage.setItem('TK_ORDERS_V5', JSON.stringify(orders));
-        localStorage.setItem('TK_WIP_V5', JSON.stringify(wip));
+    // -----------------------------------------------------------
+    // 3. Firebase 실시간 리스너 (데이터 자동 동기화)
+    // -----------------------------------------------------------
+    
+    // 발주 목록 불러오기 (orders 컬렉션)
+    const qOrders = query(collection(db, "orders"));
+    onSnapshot(qOrders, (snapshot) => {
+        orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         render();
-    }
-    function showTab(id) {
-        document.getElementById('orderTab').classList.add('hidden'); document.getElementById('workTab').classList.add('hidden');
-        document.getElementById(id).classList.remove('hidden');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + id).classList.add('active');
-    }
-    function addOrder() {
+        loading.style.display = 'none'; // 데이터 로딩 완료시 스피너 숨김
+    });
+
+    // WIP 목록 불러오기 (wip 컬렉션)
+    const qWip = query(collection(db, "wip"));
+    onSnapshot(qWip, (snapshot) => {
+        wip = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        render();
+    });
+
+    // -----------------------------------------------------------
+    // 4. 기능 함수들 (Firestore 사용)
+    // -----------------------------------------------------------
+
+    // [발주 추가]
+    window.addOrder = async function() {
         const date = document.getElementById('inputDate').value;
         const title = document.getElementById('inputTitle').value;
         const goal = parseInt(document.getElementById('inputGoal').value);
         const memo = document.getElementById('inputMemo').value;
-        if (!date || !title || !goal) return alert("필수 정보 입력하세요");
-        orders.push({ id: Date.now(), date, title, goal, done: 0, memo });
-        saveData();
-        document.getElementById('inputTitle').value=''; document.getElementById('inputGoal').value='';
+        if (!date || !title || !goal) return alert("필수 정보를 입력하세요");
+        
+        // Firestore에 저장
+        await addDoc(collection(db, "orders"), { date, title, goal, memo, done: 0 });
+        
+        document.getElementById('inputTitle').value = '';
+        document.getElementById('inputGoal').value = '';
     }
-    function deleteOrder(id) { if(confirm('삭제?')) { orders = orders.filter(o => o.id !== id); saveData(); } }
-    
-    // --- [복구된 기능] 수정 함수 ---
-    function updateOrder(id, field, value) {
-        const o = orders.find(x => x.id === id);
-        if (o) {
-            o[field] = (field === 'goal') ? parseInt(value) : value;
-            saveData();
+
+    // [발주 삭제]
+    window.deleteOrder = async function(id) {
+        if(confirm('정말 삭제하시겠습니까?')) {
+            await deleteDoc(doc(db, "orders", id));
         }
     }
 
-    function addWip() {
+    // [발주 수정 - 날짜, 수량 등]
+    window.updateOrder = async function(id, field, value) {
+        const val = (field === 'goal') ? parseInt(value) : value;
+        await updateDoc(doc(db, "orders", id), { [field]: val });
+    }
+
+    // [세트 추가]
+    window.addWip = async function() {
         const name = document.getElementById('wipName').value.trim();
         const lot = document.getElementById('wipLot').value.trim();
         const qty = parseInt(document.getElementById('wipQty').value);
-        if (!name || !lot || !qty) return alert("정보 확인하세요");
-        wip.push({ id: Date.now(), name, lot, qty });
-        saveData();
-        document.getElementById('wipQty').value=''; document.getElementById('wipLot').value='';
-    }
-    function deleteWip(id) { if(confirm('세트 삭제?')) { wip = wip.filter(x => x.id !== id); saveData(); } }
+        if (!name || !lot || !qty) return alert("정보를 확인하세요");
 
-    function getMatchedOrders(name) {
-        return orders.filter(o => o.title.includes(name) && o.done < o.goal).sort((a,b)=>new Date(a.date)-new Date(b.date));
+        await addDoc(collection(db, "wip"), { name, lot, qty });
+        
+        document.getElementById('wipQty').value = '';
+        document.getElementById('wipLot').value = '';
     }
-    function autoMatchInfo() {
+
+    // [세트 삭제]
+    window.deleteWip = async function(id) {
+        if(confirm('세트를 삭제하시겠습니까?')) {
+            await deleteDoc(doc(db, "wip", id));
+        }
+    }
+
+    // [매칭 정보 보기]
+    window.autoMatchInfo = function() {
         const sel = document.getElementById('workProductSelect').value;
         const info = document.getElementById('workTapeInfo');
         const box = document.getElementById('predictionBox');
-        if(!sel) { info.value=""; box.innerHTML=""; return;}
+        if(!sel) { info.value=""; box.innerHTML="세트를 선택하세요"; return;}
         
         const set = wip.find(x => x.id == sel);
         if(!set) return;
@@ -161,75 +214,140 @@
         info.value = `${m.tape} / ${m.size} / ${m.arr}배열`;
         info.dataset.arr = m.arr;
 
-        const targets = getMatchedOrders(set.name);
+        // 매칭되는 발주 찾기
+        const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal)
+                              .sort((a,b)=>new Date(a.date)-new Date(b.date));
+
         if(targets.length > 0) {
-            let list = targets.map(t => `<li>${t.date}: ${t.goal-t.done}개 필요</li>`).join('');
+            let list = targets.map(t => `<li>${t.date}: ${t.goal - t.done}개 필요</li>`).join('');
             box.innerHTML = `<ul class='list-disc pl-5 text-xs text-blue-700'>${list}</ul>`;
         } else {
-            box.innerHTML = "<span class='text-red-500'>매칭되는 발주 없음 (재고만 차감)</span>";
+            box.innerHTML = "<span class='text-red-500'>매칭되는 발주 없음 (재고만 차감됩니다)</span>";
         }
     }
-    function doWork() {
+
+    // [작업 완료]
+    window.doWork = async function() {
         const sel = document.getElementById('workProductSelect').value;
         const qty = parseInt(document.getElementById('workAmount').value);
         const arr = parseInt(document.getElementById('workTapeInfo').dataset.arr || 1);
-        if(!sel || !qty) return alert("입력 확인");
+        
+        if(!sel || !qty) return alert("입력을 확인하세요");
         
         const set = wip.find(x => x.id == sel);
-        if(set.qty < qty) return alert("재고 부족");
+        if(!set) return alert("세트 정보를 찾을 수 없습니다.");
+        if(set.qty < qty) return alert("재고가 부족합니다.");
         
-        set.qty -= qty;
-        if(set.qty === 0) wip = wip.filter(x => x.id != sel);
+        // 1. WIP 재고 업데이트 (Firestore)
+        const newQty = set.qty - qty;
+        if(newQty === 0) {
+            await deleteDoc(doc(db, "wip", sel));
+        } else {
+            await updateDoc(doc(db, "wip", sel), { qty: newQty });
+        }
 
+        // 2. 발주 자동 채우기 (Firestore)
         let remain = qty;
-        const targets = getMatchedOrders(set.name);
-        targets.forEach(o => {
-            if(remain <= 0) return;
+        const targets = orders.filter(o => o.title.includes(set.name) && o.done < o.goal)
+                              .sort((a,b)=>new Date(a.date)-new Date(b.date));
+        
+        for (const o of targets) {
+            if(remain <= 0) break;
             const fill = Math.min(remain, o.goal - o.done);
-            o.done += fill;
+            // Firestore 업데이트 (비동기 처리)
+            await updateDoc(doc(db, "orders", o.id), { done: o.done + fill });
             remain -= fill;
-        });
+        }
 
         const tapeUsed = Math.ceil(qty / arr);
-        document.getElementById('workResultMsg').innerText = `완료! 테이프 ${tapeUsed}장 소모`;
-        document.getElementById('workResultMsg').classList.remove('hidden');
-        saveData(); autoMatchInfo();
+        const msgBox = document.getElementById('workResultMsg');
+        msgBox.innerText = `작업 완료! 테이프 ${tapeUsed}장 소모.`;
+        msgBox.classList.remove('hidden');
+        
+        document.getElementById('workAmount').value = '';
+        // UI는 onSnapshot에 의해 자동 갱신되지만, 셀렉트박스 유지를 위해 info 갱신 필요
+        setTimeout(() => window.autoMatchInfo(), 500); 
     }
 
+    // -----------------------------------------------------------
+    // 5. 렌더링 (화면 그리기)
+    // -----------------------------------------------------------
     function render() {
+        // 발주 목록
         const tbody = document.getElementById('orderListBody');
         tbody.innerHTML = '';
-        orders.sort((a, b) => new Date(a.date) - new Date(b.date));
-        orders.forEach(o => {
+        const sortedOrders = [...orders].sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        sortedOrders.forEach(o => {
             let pct = Math.round((o.done / o.goal) * 100);
             let barColor = pct >= 100 ? 'bg-green-500' : 'bg-blue-500';
+            
             tbody.innerHTML += `
                 <tr>
-                    <td><input type="date" value="${o.date}" onchange="updateOrder(${o.id}, 'date', this.value)" class="bg-transparent text-sm w-full"></td>
-                    <td><div class="font-bold text-gray-800">${o.title}</div><div class="text-xs text-gray-500">${o.memo}</div></td>
-                    <td><input type="number" value="${o.goal}" onchange="updateOrder(${o.id}, 'goal', this.value)" class="w-20 text-right border rounded px-1"></td>
+                    <td><input type="date" value="${o.date}" onchange="updateOrder('${o.id}', 'date', this.value)" class="bg-transparent text-sm w-full"></td>
+                    <td><div class="font-bold text-gray-800">${o.title}</div><div class="text-xs text-gray-500">${o.memo || ''}</div></td>
+                    <td><input type="number" value="${o.goal}" onchange="updateOrder('${o.id}', 'goal', this.value)" class="w-20 text-right border rounded px-1"></td>
                     <td>
                         <div class="flex justify-between text-xs mb-1"><span class="font-bold">${o.done.toLocaleString()}</span><span class="text-blue-600 font-bold">${pct}%</span></div>
                         <div class="progress-bar"><div class="progress-fill ${barColor}" style="width: ${pct>100?100:pct}%"></div></div>
                     </td>
-                    <td><button onclick="deleteOrder(${o.id})" class="text-red-400 text-xs">삭제</button></td>
+                    <td><button onclick="deleteOrder('${o.id}')" class="text-red-400 text-xs font-bold hover:text-red-600">삭제</button></td>
                 </tr>`;
         });
 
+        // 세트 목록 및 작업 선택창
         const wipList = document.getElementById('wipList');
         const prodSel = document.getElementById('workProductSelect');
         const curSel = prodSel.value;
-        wipList.innerHTML = ''; prodSel.innerHTML = '<option value="">(선택)</option>';
+        
+        wipList.innerHTML = ''; 
+        prodSel.innerHTML = '<option value="">(세트를 선택하세요)</option>';
+        
         wip.sort((a,b)=>a.name.localeCompare(b.name));
+        
+        if(wip.length === 0) wipList.innerHTML = '<div class="text-sm text-gray-400 p-2">등록된 세트가 없습니다.</div>';
+
         wip.forEach(x => {
-            wipList.innerHTML += `<div class="bg-white border p-2 rounded flex justify-between"><div><b>${x.name}</b> <span class="text-indigo-600 text-xs">${x.lot}</span><div class="text-sm">${x.qty}EA</div></div><button onclick="deleteWip(${x.id})" class="text-red-400 text-xs">삭제</button></div>`;
+            wipList.innerHTML += `
+                <div class="bg-white border p-3 rounded shadow-sm flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-gray-800">${x.name}</div>
+                        <div class="text-xs text-indigo-600 font-bold">${x.lot}</div>
+                        <div class="text-sm">${x.qty.toLocaleString()} EA</div>
+                    </div>
+                    <button onclick="deleteWip('${x.id}')" class="text-xs text-red-400 border border-red-200 px-2 py-1 rounded hover:bg-red-50">삭제</button>
+                </div>`;
             prodSel.innerHTML += `<option value="${x.id}">${x.name} [${x.lot}] (${x.qty})</option>`;
         });
+        
         if(wip.find(x=>x.id==curSel)) prodSel.value = curSel;
+        else if (curSel) window.autoMatchInfo(); // 선택된게 사라졌으면 정보창 초기화용
     }
-    function resetData() { if(confirm("초기화?")) { localStorage.clear(); location.reload(); } }
+
+    // 탭 전환 이벤트 리스너
+    document.getElementById('btn-orderTab').addEventListener('click', () => {
+        document.getElementById('orderTab').classList.remove('hidden');
+        document.getElementById('workTab').classList.add('hidden');
+        document.getElementById('btn-orderTab').classList.add('active');
+        document.getElementById('btn-workTab').classList.remove('active');
+    });
+
+    document.getElementById('btn-workTab').addEventListener('click', () => {
+        document.getElementById('workTab').classList.remove('hidden');
+        document.getElementById('orderTab').classList.add('hidden');
+        document.getElementById('btn-workTab').classList.add('active');
+        document.getElementById('btn-orderTab').classList.remove('active');
+    });
+
+    // 이벤트 리스너 연결 (모듈 스코프 탈출용)
+    document.getElementById('btnAddOrder').addEventListener('click', window.addOrder);
+    document.getElementById('btnAddWip').addEventListener('click', window.addWip);
+    document.getElementById('btnDoWork').addEventListener('click', window.doWork);
+    document.getElementById('workProductSelect').addEventListener('change', window.autoMatchInfo);
+    
+    // 오늘 날짜 초기화
     document.getElementById('inputDate').valueAsDate = new Date();
-    render();
+
 </script>
 </body>
 </html>
