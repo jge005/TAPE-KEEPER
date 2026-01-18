@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAPE KEEPER - Fixed</title>
+    <title>TAPE KEEPER - Final Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; background-color: #f1f5f9; padding: 20px; }
@@ -23,6 +23,10 @@
         /* 드래그 앤 드롭 스타일 */
         .draggable-row { cursor: move; }
         .draggable-row.dragging { opacity: 0.5; background: #fef3c7; }
+        
+        /* 예측 경고 스타일 */
+        .warning-box { background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 10px; color: #991b1b; margin-bottom: 10px; font-size: 13px; }
+        .ok-box { background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 10px; color: #166534; margin-bottom: 10px; font-size: 13px; }
     </style>
 </head>
 <body class="max-w-[1600px] mx-auto">
@@ -105,7 +109,7 @@
                     <div>
                         <label class="text-xs text-gray-500">규격 선택</label>
                         <select id="rawTypeSelect" class="bg-white border-pink-200 h-[38px]"></select>
-                        <input type="text" id="rawCustomInput" class="mt-2 hidden bg-pink-50 border-pink-200 h-[38px]" placeholder="규격 직접 입력 (예: 300x300)">
+                        <input type="text" id="rawCustomInput" class="mt-2 hidden bg-pink-50 border-pink-200 h-[38px]" placeholder="규격 직접 입력">
                     </div>
                     <div><label class="text-xs text-gray-500">입고 수량 (장)</label><input type="number" id="rawQtyInput" placeholder="0"></div>
                     <button id="btnAddRaw" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-lg">원단 추가</button>
@@ -138,7 +142,7 @@
                 <h2 class="text-lg font-bold text-gray-800">⚙️ 매핑/규격/순서 설정</h2>
                 <button onclick="resetRules()" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200">🔄 기본 규칙으로 초기화</button>
             </div>
-            <div class="p-3 bg-blue-50 text-blue-800 text-sm rounded mb-4">💡 <b>팁:</b> 아래 목록에서 <b class="text-xl">≡</b> 모양을 마우스로 잡고 <b>위아래로 드래그</b>하면 순서가 바뀝니다!</div>
+            <div class="p-3 bg-blue-50 text-blue-800 text-sm rounded mb-4">💡 <b>팁:</b> 목록의 <b class="text-xl">≡</b> 를 마우스로 잡아 <b>위아래로 드래그</b>하면 순서가 변경됩니다!</div>
             <div class="flex flex-col md:flex-row gap-2 mb-4 p-4 bg-gray-50 rounded">
                 <select id="mapRoom" class="w-24 bg-white border border-gray-300 rounded px-2 font-bold text-gray-700"><option value="hansung">한성</option><option value="taeseong">태성</option></select>
                 <input type="text" id="mapKey" placeholder="실무 이름" class="flex-1">
@@ -198,40 +202,19 @@
     // --- 리스너 ---
     onSnapshot(query(collection(db, "orders")), (snap) => { orders = snap.docs.map(d => ({id:d.id, ...d.data()})); renderOrders(); updateForecast(); document.getElementById('loading').style.display='none'; });
     onSnapshot(query(collection(db, "wip")), (snap) => { wip = snap.docs.map(d => ({id:d.id, ...d.data()})); renderWip(); });
-    onSnapshot(query(collection(db, "raw_materials")), (snap) => { 
-        rawMaterials={}; snap.docs.forEach(d=>{rawMaterials[d.id]=d.data()}); 
-        renderRaw(); updateForecast(); updateRawSelect();
-    });
+    onSnapshot(query(collection(db, "raw_materials")), (snap) => { rawMaterials={}; snap.docs.forEach(d=>{rawMaterials[d.id]=d.data()}); renderRaw(); updateForecast(); updateRawSelect(); });
     onSnapshot(query(collection(db, "real_materials")), (snap) => { realMaterials={}; snap.docs.forEach(d=>{realMaterials[d.id]=d.data()}); renderReal(); });
     onSnapshot(query(collection(db, "packing")), (snap) => { packing = snap.docs.map(d => ({id:d.id, ...d.data()})); renderPacking(); });
-    onSnapshot(query(collection(db, "mappings")), (snap) => { 
-        mappings={}; snap.docs.forEach(d=>{mappings[d.id]=d.data()}); 
-        if(Object.keys(mappings).length===0) seedMappings(); else { renderMappings(); updateDataList(); }
-    });
+    onSnapshot(query(collection(db, "mappings")), (snap) => { mappings={}; snap.docs.forEach(d=>{mappings[d.id]=d.data()}); if(Object.keys(mappings).length===0) seedMappings(); else { renderMappings(); updateDataList(); } });
 
-    // --- [기능] ---
+    // --- [1~6 탭 기능] ---
     window.addOrder = async () => { const date = document.getElementById('inputDate').value; const title = document.getElementById('inputTitle').value; const goal = parseInt(document.getElementById('inputGoal').value)||0; const packed = parseInt(document.getElementById('inputPacked').value)||0; if(!date||!title||!goal) return alert("입력 확인"); await addDoc(collection(db, "orders"), { date, title, goal, packed, memo: document.getElementById('inputMemo').value, done: 0 }); document.getElementById('inputTitle').value=''; document.getElementById('inputGoal').value=''; document.getElementById('inputPacked').value=''; };
     window.deleteOrder = async(id) => { if(confirm('삭제?')) await deleteDoc(doc(db, "orders", id)); };
     window.updateOrder = async(id, f, v) => await updateDoc(doc(db, "orders", id), {[f]: (f==='goal'||f==='packed')?parseInt(v):v});
     window.addWip = async () => { const name = document.getElementById('wipName').value; const lot = document.getElementById('wipLot').value; const qty = parseInt(document.getElementById('wipQty').value); if(!name||!qty) return alert("입력 확인"); await addDoc(collection(db, "wip"), { name, lot, qty }); document.getElementById('wipQty').value=''; };
     window.deleteWip = async(id) => await deleteDoc(doc(db, "wip", id));
-    
-    // [원단 입고: 선택박스 복구]
-    window.addRaw = async () => { 
-        let type = document.getElementById('rawTypeSelect').value;
-        if(type === 'custom') type = document.getElementById('rawCustomInput').value.trim();
-        const qty = parseInt(document.getElementById('rawQtyInput').value); 
-        if(!type || !qty) return alert("규격과 수량을 입력하세요"); 
-        
-        const ref = doc(db, "raw_materials", type); const snap = await getDoc(ref); 
-        const cur = snap.exists() ? snap.data().qty : 0; 
-        await setDoc(ref, { qty: cur + qty }); 
-        document.getElementById('rawCustomInput').value=''; document.getElementById('rawQtyInput').value=''; 
-        document.getElementById('rawTypeSelect').value = "";
-        document.getElementById('rawCustomInput').classList.add('hidden');
-    };
+    window.addRaw = async () => { let type = document.getElementById('rawTypeSelect').value; if(type === 'custom') type = document.getElementById('rawCustomInput').value.trim(); const qty = parseInt(document.getElementById('rawQtyInput').value); if(!type || !qty) return alert("규격과 수량을 입력하세요"); const ref = doc(db, "raw_materials", type); const snap = await getDoc(ref); const cur = snap.exists() ? snap.data().qty : 0; await setDoc(ref, { qty: cur + qty }); document.getElementById('rawCustomInput').value=''; document.getElementById('rawQtyInput').value=''; document.getElementById('rawTypeSelect').value = ""; document.getElementById('rawCustomInput').classList.add('hidden'); };
     window.updateRaw = async(id, v) => await updateDoc(doc(db, "raw_materials", id), { qty: parseInt(v) });
-
     window.addReal = async () => { const name = document.getElementById('realNameInput').value.trim(); const qty = parseInt(document.getElementById('realQtyInput').value); if(!name||!qty) return alert("입력 확인"); const mapKey = Object.keys(mappings).find(k => name.includes(k)); let rawTarget = mapKey ? mappings[mapKey].raw : (rawMaterials[name] !== undefined ? name : null); if (rawTarget) { const rawRef = doc(db, "raw_materials", rawTarget); const rawSnap = await getDoc(rawRef); const rawCur = rawSnap.exists() ? rawSnap.data().qty : 0; const rawNeeded = qty; if (rawCur < rawNeeded) { if(!confirm(`원단 [${rawTarget}] 재고 부족! (보유: ${rawCur})\n무시하고 진행?`)) return; } await setDoc(rawRef, { qty: Math.max(0, rawCur - rawNeeded) }, { merge: true }); alert(`✅ ${name} 입고.\n📉 원단 [${rawTarget}] ${rawNeeded}장 차감.`); } else { alert(`✅ ${name} 입고.\n(매칭 원단 없음)`); } const realRef = doc(db, "real_materials", name); const realSnap = await getDoc(realRef); const realCur = realSnap.exists() ? realSnap.data().qty : 0; await setDoc(realRef, { qty: realCur + qty }); document.getElementById('realNameInput').value=''; document.getElementById('realQtyInput').value=''; };
     window.updateReal = async(id, v) => await updateDoc(doc(db, "real_materials", id), { qty: parseInt(v) });
     window.deleteReal = async (id) => { if(!confirm(`'${id}' 항목 삭제 및 원단 반환?`)) return; const realRef = doc(db, "real_materials", id); const realSnap = await getDoc(realRef); if (!realSnap.exists()) return; const qtyToRestore = realSnap.data().qty; const mapKey = Object.keys(mappings).find(k => id.includes(k)); let rawTarget = mapKey ? mappings[mapKey].raw : (rawMaterials[id] !== undefined ? id : null); if (rawTarget) { const rawRef = doc(db, "raw_materials", rawTarget); const rawSnap = await getDoc(rawRef); if (rawSnap.exists()) { const currentRaw = rawSnap.data().qty; await updateDoc(rawRef, { qty: currentRaw + qtyToRestore }); alert(`🔄 원단 [${rawTarget}]에 ${qtyToRestore}장 반환됨.`); } } await deleteDoc(realRef); };
@@ -246,7 +229,6 @@
     async function seedMappings() { const defaults = { "6084": { raw: "450x237 (6855)", arr: 8, room: "hansung", order: 1 }, "6934": { raw: "510x195 (6934)", arr: 4, room: "hansung", order: 2 }, "5869": { raw: "410x315 (5869)", arr: 4, room: "hansung", order: 3 }, "4195": { raw: "470x237 (4195)", arr: 4, room: "hansung", order: 5 }, "6855": { raw: "450x237 (6855)", arr: 8, room: "hansung", order: 7 }, "김치(좌)": { raw: "510x295 (RR7000)", arr: 2, room: "taeseong", order: 1 }, "6405": { raw: "470x130 (6405)", arr: 2, room: "taeseong", order: 6 } }; const batch = writeBatch(db); for(const k in defaults) batch.set(doc(db, "mappings", k), defaults[k]); await batch.commit(); alert("기본 규칙 초기화됨."); }
     window.resetRules = async () => { if(confirm("초기화 할까요?")) { const batch = writeBatch(db); Object.keys(mappings).forEach(k => batch.delete(doc(db, "mappings", k))); await batch.commit(); await seedMappings(); } };
     window.addMapping = async () => { const key = document.getElementById('mapKey').value.trim(); let raw = document.getElementById('mapRaw').value; if (raw === 'custom') raw = document.getElementById('mapRawCustom').value.trim(); const arr = parseInt(document.getElementById('mapArr').value); const room = document.getElementById('mapRoom').value; if(!key || !raw || !arr) return alert("입력 확인"); 
-        // 새 항목은 맨 마지막 순서로
         const maxOrder = Math.max(0, ...Object.values(mappings).filter(m=>m.room===room).map(m=>m.order||0));
         await setDoc(doc(db, "mappings", key), { raw, arr, room, order: maxOrder + 1 }); 
         document.getElementById('mapKey').value=''; document.getElementById('mapRaw').value = '450x237 (6855)'; document.getElementById('mapRawCustom').classList.add('hidden'); 
@@ -254,11 +236,79 @@
     window.deleteMapping = async (id) => await deleteDoc(doc(db, "mappings", id));
     window.updateMappingArr = async (id, val) => await updateDoc(doc(db, "mappings", id), { arr: parseInt(val) });
 
-    // 드래그 앤 드롭 로직
+    // --- 작업일지 ---
+    window.addLogRow = (room, data = {}) => { const tbody = document.getElementById(`body-${room}`); const tr = document.createElement('tr'); const { name='', prev=0, incoming=0, lot='', prod='', worker='', use=0, defect=0, curr=0, memo='' } = data; tr.innerHTML = `<td><input type="text" class="log-input font-bold text-gray-700" value="${name}" placeholder="제품명"></td><td><input type="number" class="log-input bg-gray-50" value="${prev}" oninput="calcRow(this)"></td><td><input type="number" class="log-input text-blue-600 font-bold" value="${incoming}" placeholder="0" oninput="calcRow(this)"></td><td><input type="text" class="log-input" value="${lot}"></td><td><input type="text" class="log-input" value="${prod}"></td><td><input type="text" class="log-input" value="${worker}"></td><td><input type="number" class="log-input text-red-600" value="${use}" placeholder="0" oninput="calcRow(this)"></td><td><input type="number" class="log-input text-red-400" value="${defect}" placeholder="0" oninput="calcRow(this)"></td><td class="bg-blue-50 font-bold text-gray-800 text-center align-middle"><span class="curr-val">${curr}</span></td><td><input type="text" class="log-input text-left px-2 text-xs" value="${memo}"></td><td class="text-center"><button onclick="this.closest('tr').remove()" class="text-red-300 hover:text-red-600 font-bold">X</button></td>`; tbody.appendChild(tr); calcRow(tr.querySelector('input')); };
+    window.calcRow = (input) => { const tr = input.closest('tr'); const inputs = tr.querySelectorAll('input'); const prev = parseInt(inputs[1].value)||0; const incoming = parseInt(inputs[2].value)||0; const use = parseInt(inputs[6].value)||0; const defect = parseInt(inputs[7].value)||0; const curr = prev + incoming - use - defect; tr.querySelector('.curr-val').innerText = curr; };
+    window.saveLogData = async () => { const date = document.getElementById('logDate').value; if(!date) return alert("날짜 선택!"); const getData = (room) => { const rows = document.querySelectorAll(`#body-${room} tr`); return Array.from(rows).map(tr => { const inputs = tr.querySelectorAll('input'); return { name: inputs[0].value, prev: parseInt(inputs[1].value)||0, incoming: parseInt(inputs[2].value)||0, lot: inputs[3].value, prod: inputs[4].value, worker: inputs[5].value, use: parseInt(inputs[6].value)||0, defect: parseInt(inputs[7].value)||0, curr: parseInt(tr.querySelector('.curr-val').innerText)||0, memo: inputs[9].value }; }).filter(d => d.name); }; const logData = { date: date, hansung: getData('hansung'), taeseong: getData('taeseong') }; await setDoc(doc(db, "work_logs", date), logData); alert(`📅 ${date} 저장 완료!`); };
+    window.loadLogData = async () => { const date = document.getElementById('logDate').value; if(!date) return; document.getElementById('body-hansung').innerHTML = ''; document.getElementById('body-taeseong').innerHTML = ''; const docRef = doc(db, "work_logs", date); const docSnap = await getDoc(docRef); if (docSnap.exists()) { const data = docSnap.data(); const sortLogs = (arr) => arr.sort((a,b) => { const ordA = mappings[a.name] ? mappings[a.name].order : 99; const ordB = mappings[b.name] ? mappings[b.name].order : 99; return ordA - ordB; }); sortLogs(data.hansung).forEach(d => addLogRow('hansung', d)); sortLogs(data.taeseong).forEach(d => addLogRow('taeseong', d)); } else { const q = query(collection(db, "work_logs"), where("date", "<", date), orderBy("date", "desc"), limit(1)); const prevSnaps = await getDocs(q); let prevData = { hansung: [], taeseong: [] }; if(!prevSnaps.empty) { prevData = prevSnaps.docs[0].data(); } const h_items = Object.keys(mappings).filter(k => mappings[k].room === 'hansung').sort((a,b) => (mappings[a].order||99) - (mappings[b].order||99)); h_items.forEach(name => { const last = prevData.hansung.find(d => d.name === name); const startStock = last ? last.curr : 0; addLogRow('hansung', { name: name, prev: startStock }); }); const t_items = Object.keys(mappings).filter(k => mappings[k].room === 'taeseong').sort((a,b) => (mappings[a].order||99) - (mappings[b].order||99)); t_items.forEach(name => { const last = prevData.taeseong.find(d => d.name === name); const startStock = last ? last.curr : 0; addLogRow('taeseong', { name: name, prev: startStock }); }); } };
+
+    // -----------------------------------------------------------
+    // [중요] 여기 누락되었던 렌더링 함수들을 모두 복구했습니다!
+    // -----------------------------------------------------------
+    
+    // 1. 발주 목록 그리기
+    function renderOrders() { 
+        const tbody = document.getElementById('orderListBody'); 
+        tbody.innerHTML = ''; 
+        orders.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(o => { 
+            let realGoal = Math.max(0, o.goal - (o.packed || 0)); 
+            let pct = realGoal > 0 ? Math.round((o.done / realGoal) * 100) : 100; 
+            tbody.innerHTML += `<tr><td><input type="date" value="${o.date}" onchange="updateOrder('${o.id}', 'date', this.value)" class="bg-transparent text-sm w-full"></td><td><div class="font-bold text-gray-800">${o.title}</div><div class="text-xs text-gray-500">${o.memo||''}</div></td><td><input type="number" value="${o.goal}" onchange="updateOrder('${o.id}', 'goal', this.value)" class="w-16 text-right border rounded px-1"></td><td><input type="number" value="${o.packed||0}" onchange="updateOrder('${o.id}', 'packed', this.value)" class="w-16 text-right border rounded px-1 text-gray-500"></td><td class="bg-blue-50 text-center font-bold text-blue-700">${realGoal.toLocaleString()}</td><td><div class="flex justify-between text-xs mb-1"><span>${o.done.toLocaleString()}</span><span class="text-blue-600 font-bold">${pct}%</span></div><div class="progress-bar"><div class="progress-fill ${pct>=100?'bg-green-500':'bg-blue-500'}" style="width:${pct>100?100:pct}%"></div></div></td><td><button onclick="deleteOrder('${o.id}')" class="text-red-400 text-xs">삭제</button></td></tr>`; 
+        }); 
+    }
+
+    // 2. 세트(WIP) 목록 그리기
+    function renderWip() { 
+        const list = document.getElementById('wipList'); 
+        const sel = document.getElementById('workProductSelect'); 
+        const cur = sel.value; 
+        list.innerHTML = ''; 
+        sel.innerHTML = '<option value="">(세트 선택)</option>'; 
+        wip.sort((a,b)=>a.name.localeCompare(b.name)).forEach(x => { 
+            list.innerHTML += `<div class="bg-white border p-2 rounded text-sm flex justify-between"><div><b>${x.name}</b> <span class="text-indigo-600">${x.lot}</span> (${x.qty})</div><button onclick="deleteWip('${x.id}')" class="text-red-400 text-xs">X</button></div>`; 
+            sel.innerHTML += `<option value="${x.id}">${x.name} [${x.lot}] (${x.qty})</option>`; 
+        }); 
+        if(wip.find(x=>x.id==cur)) sel.value=cur; 
+    }
+
+    // 3. 원단(Raw) 목록 그리기
+    function renderRaw() { 
+        const tbody = document.getElementById('rawListBody'); 
+        tbody.innerHTML = ''; 
+        Object.keys(rawMaterials).sort().forEach(k => { 
+            tbody.innerHTML += `<tr><td class="font-bold text-gray-700">${k}</td><td class="text-right"><input type="number" value="${rawMaterials[k].qty}" onchange="updateRaw('${k}', this.value)" class="w-20 text-right border px-1"></td><td class="text-center text-xs text-gray-400">자동연동</td></tr>`; 
+        }); 
+    }
+
+    // 4. 실무(Real) 목록 그리기
+    function renderReal() { 
+        const div = document.getElementById('realListBody'); 
+        div.innerHTML = ''; 
+        Object.keys(realMaterials).sort().forEach(k => { 
+            div.innerHTML += `<div class="bg-purple-50 border border-purple-100 p-3 rounded flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><div class="font-bold text-purple-900">${k}</div><button onclick="deleteReal('${k}')" class="text-xs text-red-400 hover:text-red-600 font-bold border px-2 rounded">X</button></div><div class="flex justify-between items-center"><input type="number" value="${realMaterials[k].qty}" onchange="updateReal('${k}', this.value)" class="w-20 text-right border bg-white rounded px-1"><span class="text-xs text-gray-500">장</span></div></div>`; 
+        }); 
+    }
+
+    // 5. 포장실(Packing) 목록 그리기
+    function renderPacking() { 
+        const tbody = document.getElementById('packListBody'); 
+        tbody.innerHTML = ''; 
+        packing.forEach(p => { 
+            tbody.innerHTML += `<tr class="border-b"><td class="p-3 font-bold text-gray-700">${p.name}</td><td class="p-3 text-right font-mono text-blue-600 font-bold">${p.qty.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deletePacking('${p.id}')" class="text-red-400 hover:text-red-600 text-sm">삭제</button></td></tr>`; 
+        }); 
+        if(packing.length === 0) tbody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-400">잔여 재고 없음</td></tr>`; 
+    }
+
+    // 6. 매핑 설정 목록 그리기 (드래그 앤 드롭 로직 포함)
     let draggedItem = null;
     function renderMappings() { 
-        const tbody = document.getElementById('mapListBody'); tbody.innerHTML = ''; 
-        const sortedKeys = Object.keys(mappings).sort((a, b) => { const mA = mappings[a]; const mB = mappings[b]; if (mA.room !== mB.room) return mA.room === 'hansung' ? -1 : 1; return (mA.order || 99) - (mB.order || 99); });
+        const tbody = document.getElementById('mapListBody'); 
+        tbody.innerHTML = ''; 
+        const sortedKeys = Object.keys(mappings).sort((a, b) => { 
+            const mA = mappings[a]; const mB = mappings[b]; 
+            if (mA.room !== mB.room) return mA.room === 'hansung' ? -1 : 1; 
+            return (mA.order || 99) - (mB.order || 99); 
+        });
         
         sortedKeys.forEach(k => { 
             const m = mappings[k]; 
@@ -270,7 +320,7 @@
             tr.dataset.id = k;
             tr.innerHTML = `<td class="p-2 text-center text-gray-400 cursor-grab text-xl drag-handle">≡</td><td class="p-2 text-center">${badge}</td><td class="p-2 font-bold">${k}</td><td class="p-2 text-xs text-gray-500">${m.raw}</td><td class="p-2 text-center"><input type="number" value="${m.arr}" onchange="updateMappingArr('${k}', this.value)" class="w-16 border text-center rounded"></td><td class="p-2 text-center"><button onclick="deleteMapping('${k}')" class="text-red-400 text-xs">X</button></td>`;
             
-            // 드래그 이벤트
+            // 드래그 이벤트 연결
             tr.addEventListener('dragstart', function() { draggedItem = this; setTimeout(() => this.classList.add('hidden'), 0); });
             tr.addEventListener('dragend', function() { setTimeout(() => this.classList.remove('hidden'), 0); draggedItem = null; });
             tr.addEventListener('dragover', function(e) { e.preventDefault(); });
@@ -279,13 +329,10 @@
             tr.addEventListener('drop', async function() {
                 this.style.backgroundColor = '';
                 if (draggedItem === this) return;
-                
-                // 같은 방끼리만 이동 가능
                 const srcId = draggedItem.dataset.id;
                 const destId = this.dataset.id;
                 if(mappings[srcId].room !== mappings[destId].room) return alert("같은 위치(한성/태성) 안에서만 이동 가능합니다.");
-
-                // 순서 재계산 및 저장
+                
                 const room = mappings[srcId].room;
                 const keys = sortedKeys.filter(k => mappings[k].room === room);
                 const fromIdx = keys.indexOf(srcId);
@@ -294,54 +341,39 @@
                 keys.splice(fromIdx, 1);
                 keys.splice(toIdx, 0, srcId);
                 
-                // 배치 업데이트
                 const batch = writeBatch(db);
-                keys.forEach((key, index) => {
-                    batch.update(doc(db, "mappings", key), { order: index + 1 });
-                });
+                keys.forEach((key, index) => { batch.update(doc(db, "mappings", key), { order: index + 1 }); });
                 await batch.commit();
             });
-
             tbody.appendChild(tr);
         }); 
     }
 
-    // --- 작업일지 ---
-    window.addLogRow = (room, data = {}) => { const tbody = document.getElementById(`body-${room}`); const tr = document.createElement('tr'); const { name='', prev=0, incoming=0, lot='', prod='', worker='', use=0, defect=0, curr=0, memo='' } = data; tr.innerHTML = `<td><input type="text" class="log-input font-bold text-gray-700" value="${name}" placeholder="제품명"></td><td><input type="number" class="log-input bg-gray-50" value="${prev}" oninput="calcRow(this)"></td><td><input type="number" class="log-input text-blue-600 font-bold" value="${incoming}" placeholder="0" oninput="calcRow(this)"></td><td><input type="text" class="log-input" value="${lot}"></td><td><input type="text" class="log-input" value="${prod}"></td><td><input type="text" class="log-input" value="${worker}"></td><td><input type="number" class="log-input text-red-600" value="${use}" placeholder="0" oninput="calcRow(this)"></td><td><input type="number" class="log-input text-red-400" value="${defect}" placeholder="0" oninput="calcRow(this)"></td><td class="bg-blue-50 font-bold text-gray-800 text-center align-middle"><span class="curr-val">${curr}</span></td><td><input type="text" class="log-input text-left px-2 text-xs" value="${memo}"></td><td class="text-center"><button onclick="this.closest('tr').remove()" class="text-red-300 hover:text-red-600 font-bold">X</button></td>`; tbody.appendChild(tr); calcRow(tr.querySelector('input')); };
-    window.calcRow = (input) => { const tr = input.closest('tr'); const inputs = tr.querySelectorAll('input'); const prev = parseInt(inputs[1].value)||0; const incoming = parseInt(inputs[2].value)||0; const use = parseInt(inputs[6].value)||0; const defect = parseInt(inputs[7].value)||0; const curr = prev + incoming - use - defect; tr.querySelector('.curr-val').innerText = curr; };
-    window.saveLogData = async () => { const date = document.getElementById('logDate').value; if(!date) return alert("날짜 선택!"); const getData = (room) => { const rows = document.querySelectorAll(`#body-${room} tr`); return Array.from(rows).map(tr => { const inputs = tr.querySelectorAll('input'); return { name: inputs[0].value, prev: parseInt(inputs[1].value)||0, incoming: parseInt(inputs[2].value)||0, lot: inputs[3].value, prod: inputs[4].value, worker: inputs[5].value, use: parseInt(inputs[6].value)||0, defect: parseInt(inputs[7].value)||0, curr: parseInt(tr.querySelector('.curr-val').innerText)||0, memo: inputs[9].value }; }).filter(d => d.name); }; const logData = { date: date, hansung: getData('hansung'), taeseong: getData('taeseong') }; await setDoc(doc(db, "work_logs", date), logData); alert(`📅 ${date} 저장 완료!`); };
-    window.loadLogData = async () => { const date = document.getElementById('logDate').value; if(!date) return; document.getElementById('body-hansung').innerHTML = ''; document.getElementById('body-taeseong').innerHTML = ''; const docRef = doc(db, "work_logs", date); const docSnap = await getDoc(docRef); if (docSnap.exists()) { const data = docSnap.data(); const sortLogs = (arr) => arr.sort((a,b) => { const ordA = mappings[a.name] ? mappings[a.name].order : 99; const ordB = mappings[b.name] ? mappings[b.name].order : 99; return ordA - ordB; }); sortLogs(data.hansung).forEach(d => addLogRow('hansung', d)); sortLogs(data.taeseong).forEach(d => addLogRow('taeseong', d)); } else { const q = query(collection(db, "work_logs"), where("date", "<", date), orderBy("date", "desc"), limit(1)); const prevSnaps = await getDocs(q); let prevData = { hansung: [], taeseong: [] }; if(!prevSnaps.empty) { prevData = prevSnaps.docs[0].data(); } const h_items = Object.keys(mappings).filter(k => mappings[k].room === 'hansung').sort((a,b) => (mappings[a].order||99) - (mappings[b].order||99)); h_items.forEach(name => { const last = prevData.hansung.find(d => d.name === name); const startStock = last ? last.curr : 0; addLogRow('hansung', { name: name, prev: startStock }); }); const t_items = Object.keys(mappings).filter(k => mappings[k].room === 'taeseong').sort((a,b) => (mappings[a].order||99) - (mappings[b].order||99)); t_items.forEach(name => { const last = prevData.taeseong.find(d => d.name === name); const startStock = last ? last.curr : 0; addLogRow('taeseong', { name: name, prev: startStock }); }); } };
-
-    // --- Helper Functions ---
-    // 원단 선택박스 갱신 (복구됨)
+    // 7. 기타 업데이트 함수들
     function updateRawSelect() { 
         const sel = document.getElementById('rawTypeSelect'); 
         const mapRaw = document.getElementById('mapRaw');
         const sorted = Object.keys(rawMaterials).sort();
-        
         let html = '<option value="">(선택하세요)</option>';
         sorted.forEach(k => html += `<option value="${k}">${k}</option>`);
         html += '<option value="custom">기타 (직접입력)</option>';
-        
-        sel.innerHTML = html;
+        sel.innerHTML = html; 
         mapRaw.innerHTML = html; 
     }
-    function updateDataList() { const dl = document.getElementById('realSuggestions'); dl.innerHTML = ''; Object.keys(mappings).forEach(k => { dl.innerHTML += `<option value="${k}">`; }); const calcSel = document.getElementById('calcProduct'); calcSel.innerHTML = '<option value="">(제품 선택)</option>'; Object.keys(mappings).sort().forEach(k => { calcSel.innerHTML += `<option value="${k}">${k}</option>`; }); }
     
-    // 이전에 누락된 renderPacking 복구 완료
-    function renderPacking() { 
-        const tbody = document.getElementById('packListBody'); 
-        tbody.innerHTML = ''; 
-        packing.forEach(p => { 
-            tbody.innerHTML += `<tr class="border-b"><td class="p-3 font-bold text-gray-700">${p.name}</td><td class="p-3 text-right font-mono text-blue-600 font-bold">${p.qty.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deletePacking('${p.id}')" class="text-red-400 hover:text-red-600 text-sm">삭제</button></td></tr>`; 
-        }); 
-        if(packing.length === 0) tbody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-400">잔여 재고 없음</td></tr>`; 
+    function updateDataList() { 
+        const dlRaw = document.getElementById('realSuggestions'); 
+        dlRaw.innerHTML = ''; 
+        Object.keys(mappings).forEach(k => dlRaw.innerHTML += `<option value="${k}">`); 
+        
+        const calcSel = document.getElementById('calcProduct'); 
+        calcSel.innerHTML = '<option value="">(제품 선택)</option>'; 
+        Object.keys(mappings).sort().forEach(k => { calcSel.innerHTML += `<option value="${k}">${k}</option>`; }); 
     }
 
     const tabs = ['orderTab', 'workTab', 'rawTab', 'realTab', 'logTab', 'packTab'];
     tabs.forEach(t => document.getElementById('btn-'+t).addEventListener('click', ()=>{ tabs.forEach(x => { document.getElementById(x).classList.add('hidden'); document.getElementById('btn-'+x).classList.remove('active'); }); document.getElementById(t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active'); }));
     
-    // 원단 입력 토글
     function toggleRawInput(selectId, inputId) {
         document.getElementById(selectId).addEventListener('change', function() { 
             const input = document.getElementById(inputId); 
